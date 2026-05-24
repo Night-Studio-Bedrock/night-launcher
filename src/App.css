@@ -11,28 +11,32 @@
 }
 
 /* ===================================================
-   BOTÓN ROCKET (Fondo con opacidad, texto intacto)
+   BOTÓN ROCKET (Responsive para Mobile)
    =================================================== */
 .rocket-button {
   background: rgba(15, 15, 20, 0.4); 
   backdrop-filter: blur(4px); 
   -webkit-backdrop-filter: blur(4px);
-  padding: 16px 40px;
-  /* Borde más brillante usando el color base directamente */
+  padding: 12px 24px;
   border: 1px solid color-mix(in srgb, var(--theme-color, #a855f7) 80%, transparent); 
   border-radius: 12px;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
-  gap: 12px;
-  /* Outer glow mucho más fuerte con el color base */
+  gap: 8px;
   box-shadow: 0 0 20px color-mix(in srgb, var(--theme-color, #a855f7) 40%, transparent), 
               inset 0 0 15px color-mix(in srgb, var(--theme-color, #a855f7) 20%, transparent);
   cursor: pointer !important;
 }
 
+@media (min-width: 768px) {
+  .rocket-button {
+    padding: 16px 40px;
+    gap: 12px;
+  }
+}
+
 .rocket-button:not(:disabled):hover {
-  /* Al poner el mouse, explota el brillo */
   box-shadow: 0 0 40px var(--theme-color, #a855f7), 
               inset 0 0 25px color-mix(in srgb, var(--theme-color, #a855f7) 60%, transparent);
   border-color: var(--theme-color, #a855f7); 
@@ -57,7 +61,6 @@
   pointer-events: none; 
 }
 
-/* Estado de Lanzamiento */
 .rocket-button:disabled {
   background: rgba(24, 24, 27, 0.2) !important;
   box-shadow: 0 0 20px rgba(34, 197, 94, 0.3) !important;
@@ -161,17 +164,26 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 /* ===================================================
-   ANIMACIÓN DEL LOGO PRINCIPAL (BULLETPROOF)
+   ANIMACIÓN DEL LOGO PRINCIPAL (RESPONSIVE)
    =================================================== */
 .launcher-title {
-  width: 500px;
+  width: 100%;
+  max-width: 500px;
   height: auto;
   filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8));
-  /* Transición fluida con un sutil efecto elástico al final (cubic-bezier) */
   transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
-  pointer-events: auto !important; /* Fuerza al logo a responder al mouse */
+  pointer-events: auto !important;
 }
 
-.launcher-title:hover {
-  transform: scale(1.05) translateY(-10px); /* Crece un 5% y flota hacia arriba */
+@media (min-width: 768px) {
+  .launcher-title:hover {
+    transform: scale(1.05) translateY(-10px);
+  }
+}
+
+/* Mobile: sin hover para evitar problemas */
+@media (max-width: 767px) {
+  .launcher-title {
+    transform: scale(0.95);
+  }
 }
