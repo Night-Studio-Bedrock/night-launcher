@@ -138,6 +138,37 @@ function App() {
     initLauncher();
   }, []);
 
+  // Helper para invocar comandos Tauri
+  const invokeTauri = async (command: string, args: any = {}): Promise<any> => {
+    return new Promise((resolve, reject) => {
+      const id = Math.random().toString(36);
+      
+      const listener = (event: MessageEvent) => {
+        if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
+          window.removeEventListener('message', listener);
+          resolve(event.data.result);
+        } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
+          window.removeEventListener('message', listener);
+          reject(new Error(event.data.error));
+        }
+      };
+      
+      window.addEventListener('message', listener);
+      
+      window.parent.postMessage({
+        type: 'TAURI_INVOKE',
+        id: id,
+        command: command,
+        args: args
+      }, '*');
+      
+      setTimeout(() => {
+        window.removeEventListener('message', listener);
+        reject(new Error(`Tauri invoke timeout: ${command}`));
+      }, 10000);
+    });
+  };
+
   const handleLaunchClick = async () => {
     setIsLaunching(true);
     try {
@@ -148,7 +179,7 @@ function App() {
       console.log('Is Tauri frame (window !== window.top):', isTauriFrame);
 
       if (!isTauriFrame) {
-        console.warn('Not in Tauri iframe - window === window.top');
+        console.warn('Not in Tauri iframe');
         setIsLaunching(false);
         return;
       }
@@ -163,53 +194,38 @@ function App() {
 
       console.log('Config loaded:', config);
 
+      // ===== INYECCIÓN DE TEXTURAS =====
+      if (shouldInject && config.data.textures && config.data.textures.length > 0) {
+        console.log('Starting texture injection...');
+        
+        try {
+          const baseUrl = config.url || "https://night-studio-bedrock.github.io/night-launcher-data/";
+          const textureUrls = config.data.textures.map((tex: string) => 
+            `${baseUrl}textures/${tex}`
+          );
+          
+          console.log('Texture URLs:', textureUrls);
+          console.log('Invoking inject_textures...');
+          
+          const textureResult = await invokeTauri('inject_textures', { 
+            texture_urls: textureUrls 
+          });
+          
+          console.log('Texture injection result:', textureResult);
+        } catch (texError) {
+          console.warn('Texture injection warning:', texError);
+          // No bloqueamos el launch si hay error en texturas
+        }
+      }
+
+      // ===== LANZAR MINECRAFT =====
       const { ip, port } = config.data.server;
       const serverUrl = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
 
       console.log('Server URL:', serverUrl);
+      console.log('Invoking launch_minecraft_with_url...');
 
-      // Usar postMessage para invocar Tauri desde el iframe
-      const result = await new Promise<any>((resolve, reject) => {
-        const id = Math.random().toString(36);
-        
-        console.log('Creating message listener with id:', id);
-        
-        const listener = (event: MessageEvent) => {
-          console.log('Received message event:', event.data);
-          if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
-            window.removeEventListener('message', listener);
-            console.log('Got TAURI_RESULT:', event.data);
-            resolve(event.data.result);
-          } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
-            window.removeEventListener('message', listener);
-            console.log('Got TAURI_ERROR:', event.data);
-            reject(new Error(event.data.error));
-          }
-        };
-        
-        window.addEventListener('message', listener);
-        console.log('Message listener attached');
-        
-        console.log('Sending postMessage to parent with TAURI_INVOKE');
-        // Enviar mensaje al parent (Tauri wrapper)
-        const messageData = {
-          type: 'TAURI_INVOKE',
-          id: id,
-          command: 'launch_minecraft_with_url',
-          args: { url: serverUrl }
-        };
-        console.log('Message to send:', messageData);
-        console.log('Sending to window.parent');
-        window.parent.postMessage(messageData, '*');
-        console.log('postMessage sent');
-        
-        // Timeout si no responde
-        setTimeout(() => {
-          console.log('Timeout waiting for Tauri response');
-          window.removeEventListener('message', listener);
-          reject(new Error('Tauri invoke timeout'));
-        }, 10000);
-      });
+      const result = await invokeTauri('launch_minecraft_with_url', { url: serverUrl });
 
       console.log('Tauri result:', result);
       console.log('=== LAUNCH SUCCESSFUL ===');
