@@ -136,13 +136,15 @@ function App() {
     setIsLaunching(true);
     try {
       // Verificar si está en Tauri
-      if (!window.__TAURI__) {
+      const hasTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+      
+      if (!hasTauri) {
         console.warn('Not in Tauri environment');
         setIsLaunching(false);
         return;
       }
 
-      const { invoke } = window.__TAURI__.core;
+      const { invoke } = (window as any).__TAURI__.core;
 
       console.log('=== LAUNCH BUTTON CLICKED FROM VERCEL ===');
 
@@ -168,7 +170,7 @@ function App() {
       console.log('Tauri result:', result);
       console.log('=== LAUNCH SUCCESSFUL ===');
 
-      // Esperar un poco para que se vea la animación
+      // Esperar un bit para que se vea la animación
       await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (e) {
       console.error("Launch error:", e);
