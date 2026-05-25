@@ -135,9 +135,43 @@ function App() {
   const handleLaunchClick = async () => {
     setIsLaunching(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Verificar si está en Tauri
+      if (!window.__TAURI__) {
+        console.warn('Not in Tauri environment');
+        setIsLaunching(false);
+        return;
+      }
+
+      const { invoke } = window.__TAURI__.core;
+
+      console.log('=== LAUNCH BUTTON CLICKED FROM VERCEL ===');
+
+      // Cargar config del repositorio
+      const configUrl = `https://halo333x.github.io/bedrock-launcher/data.json?nocache=${new Date().getTime()}`;
+      console.log('Fetching config from:', configUrl);
+
+      const configResponse = await fetch(configUrl);
+      if (!configResponse.ok) throw new Error('Failed to fetch config');
+      const config = await configResponse.json();
+
+      console.log('Config loaded:', config);
+
+      const { ip, port } = config.data.server;
+      const serverUrl = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
+
+      console.log('Server URL:', serverUrl);
+      console.log('Invoking Tauri launch_minecraft_with_url');
+
+      // Invocar comando Rust
+      const result = await invoke('launch_minecraft_with_url', { url: serverUrl });
+
+      console.log('Tauri result:', result);
+      console.log('=== LAUNCH SUCCESSFUL ===');
+
+      // Esperar un poco para que se vea la animación
+      await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (e) {
-      console.error("Connection error:", e);
+      console.error("Launch error:", e);
     } finally {
       setTimeout(() => setIsLaunching(false), 1000);
     }
