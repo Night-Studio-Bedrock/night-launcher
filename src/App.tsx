@@ -92,12 +92,16 @@ function App() {
   // ==========================================
   useEffect(() => {
     const initLauncher = async () => {
+      console.log('=== INIT LAUNCHER START ===');
       try {
         setSyncProgress(20);
+        console.log('Fetching config from:', CONFIG_URL);
         const res = await fetch(`${CONFIG_URL}?nocache=${new Date().getTime()}`);
+        console.log('Config response status:', res.status);
         if (!res.ok) throw new Error("Failed to fetch configuration");
         setSyncProgress(50);
         const config = await res.json();
+        console.log('Config loaded:', config);
 
         const baseUrl = config.url || "https://night-studio-bedrock.github.io/night-launcher-data/";
         if (config.launch_button_color) setThemeColor(config.launch_button_color);
@@ -121,12 +125,13 @@ function App() {
           if (social_media) setSocialMedia(social_media);
         }
         setSyncProgress(100);
-        setTimeout(() => setIsSyncing(false), 300);
+        console.log('=== INIT LAUNCHER SUCCESS ===');
+        setIsSyncing(false);
       } catch (error) {
-        console.error(error);
+        console.error('=== INIT LAUNCHER ERROR ===', error);
         setSyncMsg("Ready!");
         setSyncProgress(100);
-        setTimeout(() => setIsSyncing(false), 100);
+        setIsSyncing(false);
       } 
     };
 
@@ -136,18 +141,17 @@ function App() {
   const handleLaunchClick = async () => {
     setIsLaunching(true);
     try {
-      // Verificar si está en Tauri
-      const hasTauri = typeof window !== 'undefined' && (window as any).__TAURI__;
+      // Verificar si está en iframe de Tauri
+      const isTauriFrame = window.parent !== window;
       
-      if (!hasTauri) {
-        console.warn('Not in Tauri environment');
+      console.log('=== LAUNCH BUTTON CLICKED ===');
+      console.log('Is Tauri frame:', isTauriFrame);
+
+      if (!isTauriFrame) {
+        console.warn('Not in Tauri iframe');
         setIsLaunching(false);
         return;
       }
-
-      const { invoke } = (window as any).__TAURI__.core;
-
-      console.log('=== LAUNCH BUTTON CLICKED FROM VERCEL ===');
 
       // Cargar config del repositorio
       const configUrl = `https://halo333x.github.io/bedrock-launcher/data.json?nocache=${new Date().getTime()}`;
@@ -163,15 +167,41 @@ function App() {
       const serverUrl = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
 
       console.log('Server URL:', serverUrl);
-      console.log('Invoking Tauri launch_minecraft_with_url');
 
-      // Invocar comando Rust
-      const result = await invoke('launch_minecraft_with_url', { url: serverUrl });
+      // Usar postMessage para invocar Tauri desde el iframe
+      const result = await new Promise((resolve, reject) => {
+        const id = Math.random().toString(36);
+        
+        const listener = (event: any) => {
+          if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
+            window.removeEventListener('message', listener);
+            resolve(event.data.result);
+          } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
+            window.removeEventListener('message', listener);
+            reject(new Error(event.data.error));
+          }
+        };
+        
+        window.addEventListener('message', listener);
+        
+        // Enviar mensaje al parent (Tauri wrapper)
+        window.parent.postMessage({
+          type: 'TAURI_INVOKE',
+          id: id,
+          command: 'launch_minecraft_with_url',
+          args: { url: serverUrl }
+        }, '*');
+        
+        // Timeout si no responde
+        setTimeout(() => {
+          window.removeEventListener('message', listener);
+          reject(new Error('Tauri invoke timeout'));
+        }, 10000);
+      });
 
       console.log('Tauri result:', result);
       console.log('=== LAUNCH SUCCESSFUL ===');
 
-      // Esperar un bit para que se vea la animación
       await new Promise(resolve => setTimeout(resolve, 2000));
     } catch (e) {
       console.error("Launch error:", e);
