@@ -208,7 +208,7 @@ function App() {
           console.log('Invoking inject_textures...');
           
           const textureResult = await invokeTauri('inject_textures', { 
-            texture_urls: textureUrls 
+            textureUrls: textureUrls 
           });
           
           console.log('Texture injection result:', textureResult);
