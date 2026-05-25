@@ -199,7 +199,8 @@ function App() {
           args: { url: serverUrl }
         };
         console.log('Message to send:', messageData);
-        window.top?.postMessage(messageData, '*');
+        console.log('Sending to window.parent');
+        window.parent.postMessage(messageData, '*');
         console.log('postMessage sent');
         
         // Timeout si no responde
