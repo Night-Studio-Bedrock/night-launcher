@@ -91,6 +91,112 @@ function App() {
   }, [bgVolume]);
 
   // ==========================================
+  // MONITOREAR CIERRE DE MINECRAFT
+  // ==========================================
+  useEffect(() => {
+    let minecraftCheckInterval: NodeJS.Timeout;
+    let minecraftWasRunning = false;
+
+    const checkMinecraftStatus = async () => {
+      if (window.parent && window.parent !== window) {
+        try {
+          const response = await new Promise<boolean>((resolve) => {
+            const id = Math.random().toString(36);
+            const listener = (event: MessageEvent) => {
+              if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
+                window.removeEventListener('message', listener);
+                resolve(event.data.result === true);
+              } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
+                window.removeEventListener('message', listener);
+                resolve(false);
+              }
+            };
+            window.addEventListener('message', listener);
+            window.parent.postMessage({
+              type: 'TAURI_INVOKE',
+              id: id,
+              command: 'check_minecraft_running',
+              args: {}
+            }, '*');
+            setTimeout(() => resolve(false), 2000);
+          });
+
+          if (minecraftWasRunning && !response) {
+            console.log('=== MINECRAFT CLOSED - CLEANING UP ===');
+            minecraftWasRunning = false;
+            
+            const cleanupResponse = await new Promise<string>((resolve) => {
+              const id = Math.random().toString(36);
+              const listener = (event: MessageEvent) => {
+                if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
+                  window.removeEventListener('message', listener);
+                  resolve(event.data.result);
+                } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
+                  window.removeEventListener('message', listener);
+                  resolve('');
+                }
+              };
+              window.addEventListener('message', listener);
+              window.parent.postMessage({
+                type: 'TAURI_INVOKE',
+                id: id,
+                command: 'cleanup_injected_textures',
+                args: {}
+              }, '*');
+              setTimeout(() => resolve(''), 5000);
+            });
+
+            console.log('Texture cleanup result:', cleanupResponse);
+          } else if (response) {
+            minecraftWasRunning = true;
+          }
+        } catch (error) {
+          console.error('Error checking Minecraft status:', error);
+        }
+      }
+    };
+
+    minecraftCheckInterval = setInterval(checkMinecraftStatus, 3000);
+    return () => clearInterval(minecraftCheckInterval);
+  }, []);
+
+  // ==========================================
+  // LIMPIAR AL CERRAR EL LAUNCHER
+  // ==========================================
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      console.log('=== LAUNCHER CLOSING - CLEANING UP ===');
+      
+      if (window.parent && window.parent !== window) {
+        try {
+          await new Promise<void>((resolve) => {
+            const id = Math.random().toString(36);
+            const listener = (event: MessageEvent) => {
+              if ((event.data.type === 'TAURI_RESULT' || event.data.type === 'TAURI_ERROR') && event.data.id === id) {
+                window.removeEventListener('message', listener);
+                resolve();
+              }
+            };
+            window.addEventListener('message', listener);
+            window.parent.postMessage({
+              type: 'TAURI_INVOKE',
+              id: id,
+              command: 'cleanup_injected_textures',
+              args: {}
+            }, '*');
+            setTimeout(() => resolve(), 3000);
+          });
+        } catch (error) {
+          console.error('Error cleaning up on close:', error);
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // ==========================================
   // INITIALIZE LAUNCHER
   // ==========================================
   useEffect(() => {
