@@ -105,7 +105,7 @@ function App() {
             const listener = (event: MessageEvent) => {
               if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
                 window.removeEventListener('message', listener);
-                resolve(event.data.result === true);
+                resolve(event.data.result === 'true');
               } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
                 window.removeEventListener('message', listener);
                 resolve(false);
