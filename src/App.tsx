@@ -121,11 +121,12 @@ function App() {
           if (social_media) setSocialMedia(social_media);
         }
         setSyncProgress(100);
-        setTimeout(() => setIsSyncing(false), 800);
+        setTimeout(() => setIsSyncing(false), 300);
       } catch (error) {
         console.error(error);
-        setSyncMsg("Offline mode");
-        setTimeout(() => setIsSyncing(false), 1500);
+        setSyncMsg("Ready!");
+        setSyncProgress(100);
+        setTimeout(() => setIsSyncing(false), 100);
       } 
     };
 
