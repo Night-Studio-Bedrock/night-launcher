@@ -61,7 +61,7 @@ function App() {
   const [syncMsg, setSyncMsg] = useState("Downloading Night Assets...");
   const [syncProgress, setSyncProgress] = useState(0);
   
-  const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/config.json";
+  const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
 
   // ==========================================
   // MUSIC EFFECT
@@ -154,7 +154,7 @@ function App() {
       }
 
       // Cargar config del repositorio
-      const configUrl = `https://night-studio-bedrock.github.io/night-launcher-data/config.json?nocache=${new Date().getTime()}`;
+      const configUrl = `https://night-studio-bedrock.github.io/night-launcher-data/data.json?nocache=${new Date().getTime()}`;
       console.log('Fetching config from:', configUrl);
 
       const configResponse = await fetch(configUrl);
