@@ -358,6 +358,30 @@ function App() {
       const result = await invokeTauri('launch_minecraft_with_url', { url: serverUrl });
 
       console.log('Tauri result:', result);
+      
+      // ===== CUSTOMIZAR VENTANA DE MINECRAFT =====
+      if (config.window) {
+        console.log('Customizing Minecraft window...');
+        
+        // Esperar un poco para que Minecraft se abra
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const windowName = config.window.name || 'Night Launcher';
+        const baseUrl = config.url || "https://night-studio-bedrock.github.io/night-launcher-data/";
+        const iconUrl = config.window.icon ? `${baseUrl}icons/${config.window.icon}` : null;
+        
+        try {
+          const customizeResult = await invokeTauri('customize_minecraft_window', { 
+            windowName: windowName,
+            iconUrl: iconUrl
+          });
+          console.log('Window customization result:', customizeResult);
+        } catch (customizeError) {
+          console.warn('Window customization warning:', customizeError);
+          // No bloqueamos el launch si hay error
+        }
+      }
+
       console.log('=== LAUNCH SUCCESSFUL ===');
 
       await new Promise(resolve => setTimeout(resolve, 2000));
