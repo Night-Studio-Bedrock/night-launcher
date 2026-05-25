@@ -94,7 +94,7 @@ function App() {
   // MONITOREAR CIERRE DE MINECRAFT
   // ==========================================
   useEffect(() => {
-    let minecraftCheckInterval: NodeJS.Timeout;
+    let minecraftCheckInterval: ReturnType<typeof setInterval>;
     let minecraftWasRunning = false;
 
     const checkMinecraftStatus = async () => {
