@@ -63,6 +63,8 @@ function App() {
   const [isInjecting, setIsInjecting] = useState(false);
   const [injectMsg, setInjectMsg] = useState("Preparing resources...");
   const [injectProgress, setInjectProgress] = useState(0);
+  const [estimatedTimeLeft, setEstimatedTimeLeft] = useState<string>("");
+  const [injectionStartTime, setInjectionStartTime] = useState<number>(0);
   
   const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
 
@@ -211,9 +213,29 @@ function App() {
       if (window.parent && window.parent !== window) {
         window.addEventListener('message', (event) => {
           if (event.data?.type === 'TEXTURE_PROGRESS') {
-            console.log('Texture progress:', event.data.progress, '%');
             setInjectProgress(event.data.progress);
             setInjectMsg(event.data.message || 'Downloading resources...');
+            
+            // Calcular tiempo estimado basándose en el progreso y tiempo transcurrido
+            if (injectionStartTime > 0 && event.data.progress > 0 && event.data.progress < 100) {
+              const elapsedMs = Date.now() - injectionStartTime;
+              const elapsedSecs = elapsedMs / 1000;
+              const progressPercent = event.data.progress / 100;
+              
+              const estimatedTotalSecs = elapsedSecs / progressPercent;
+              const estimatedRemainingSecs = estimatedTotalSecs - elapsedSecs;
+              
+              let timeStr = '';
+              if (estimatedRemainingSecs < 60) {
+                timeStr = `${Math.max(1, Math.round(estimatedRemainingSecs))}s`;
+              } else if (estimatedRemainingSecs < 3600) {
+                timeStr = `${(estimatedRemainingSecs / 60).toFixed(1)}m`;
+              } else {
+                timeStr = `${(estimatedRemainingSecs / 3600).toFixed(1)}h`;
+              }
+              
+              setEstimatedTimeLeft(timeStr);
+            }
           }
         });
       }
@@ -320,7 +342,9 @@ function App() {
       if (shouldInject && config.data.textures && config.data.textures.length > 0) {
         console.log('Starting texture injection...');
         setIsInjecting(true);
+        setInjectionStartTime(Date.now());
         setInjectProgress(0);
+        setEstimatedTimeLeft('');
         setInjectMsg('Preparing resources...');
         
         try {
@@ -363,8 +387,8 @@ function App() {
       if (config.window) {
         console.log('Customizing Minecraft window...');
         
-        // Esperar un poco para que Minecraft se abra
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // Esperar más tiempo para que Minecraft tenga tiempo de crear la ventana
+        await new Promise(resolve => setTimeout(resolve, 4000));
         
         const windowName = config.window.name || 'Night Launcher';
         const baseUrl = config.url || "https://night-studio-bedrock.github.io/night-launcher-data/";
@@ -469,7 +493,9 @@ function App() {
           <div className={`mt-2 bg-black/40 border border-white/10 rounded-2xl p-4 md:p-5 flex items-center gap-4 md:gap-5 w-[90%] max-w-[450px] backdrop-blur-md transition-all duration-500 transform pointer-events-auto ${(isSyncing || isInjecting || isLaunching) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold text-white tracking-wide truncate">{windowTitle || 'Night Launcher'}</h3>
-              <p className="text-[10px] md:text-xs text-zinc-400 mt-1 truncate">{isInjecting ? injectMsg : isSyncing ? syncMsg : 'Launching...'}</p>
+              <p className="text-[10px] md:text-xs text-zinc-400 mt-1 truncate">
+                {isInjecting ? `${injectMsg} ${estimatedTimeLeft ? `- ${estimatedTimeLeft}` : ''}` : isSyncing ? syncMsg : 'Launching...'}
+              </p>
               <div className="w-full h-1.5 bg-white/10 rounded-full mt-3 md:mt-4 overflow-hidden">
                 <div className="h-full bg-purple-500 transition-all duration-500 ease-out" style={{ width: `${isInjecting ? injectProgress : isSyncing ? syncProgress : 100}%`, backgroundColor: themeColor }} />
               </div>
