@@ -381,9 +381,9 @@ function App() {
       console.log('Invoking launch_minecraft_with_bedrockconnect...');
 
       const result = await invokeTauri('launch_minecraft_with_bedrockconnect', { 
-        server_name: serverName,
-        server_ip: ip,
-        server_port: port
+        serverName: serverName,
+        serverIp: ip,
+        serverPort: port
       });
 
       console.log('Tauri result:', result);
