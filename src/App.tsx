@@ -93,9 +93,10 @@ function App() {
   // ==========================================
   // MONITOREAR CIERRE DE MINECRAFT
   // ==========================================
+  const minecraftWasRunningRef = useRef(false);
+
   useEffect(() => {
     let minecraftCheckInterval: ReturnType<typeof setInterval>;
-    let minecraftWasRunning = false;
 
     const checkMinecraftStatus = async () => {
       if (window.parent && window.parent !== window) {
@@ -121,9 +122,14 @@ function App() {
             setTimeout(() => resolve(false), 2000);
           });
 
-          if (minecraftWasRunning && !response) {
+          // Si Minecraft está corriendo, actualizar el ref
+          if (response) {
+            minecraftWasRunningRef.current = true;
+            console.log('Minecraft is running');
+          } else if (minecraftWasRunningRef.current && !response) {
+            // Si ESTABA corriendo y ahora NO está
             console.log('=== MINECRAFT CLOSED - CLEANING UP ===');
-            minecraftWasRunning = false;
+            minecraftWasRunningRef.current = false;
             
             const cleanupResponse = await new Promise<string>((resolve) => {
               const id = Math.random().toString(36);
@@ -147,8 +153,6 @@ function App() {
             });
 
             console.log('Texture cleanup result:', cleanupResponse);
-          } else if (response) {
-            minecraftWasRunning = true;
           }
         } catch (error) {
           console.error('Error checking Minecraft status:', error);
