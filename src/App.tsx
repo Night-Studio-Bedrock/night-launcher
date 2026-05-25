@@ -60,6 +60,9 @@ function App() {
   const [isSyncing, setIsSyncing] = useState(true);
   const [syncMsg, setSyncMsg] = useState("Downloading Night Assets...");
   const [syncProgress, setSyncProgress] = useState(0);
+  const [isInjecting, setIsInjecting] = useState(false);
+  const [injectMsg, setInjectMsg] = useState("Preparing resources...");
+  const [injectProgress, setInjectProgress] = useState(0);
   
   const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
 
@@ -93,6 +96,18 @@ function App() {
   useEffect(() => {
     const initLauncher = async () => {
       console.log('=== INIT LAUNCHER START ===');
+      
+      // Escuchar eventos de progreso de Tauri
+      if (window.parent && window.parent !== window) {
+        window.addEventListener('message', (event) => {
+          if (event.data?.type === 'TEXTURE_PROGRESS') {
+            console.log('Texture progress:', event.data.progress, '%');
+            setInjectProgress(event.data.progress);
+            setInjectMsg(event.data.message || 'Downloading resources...');
+          }
+        });
+      }
+      
       try {
         setSyncProgress(20);
         console.log('Fetching config from:', CONFIG_URL);
@@ -162,10 +177,7 @@ function App() {
         args: args
       }, '*');
       
-      setTimeout(() => {
-        window.removeEventListener('message', listener);
-        reject(new Error(`Tauri invoke timeout: ${command}`));
-      }, 10000);
+      // SIN TIMEOUT - dejar que tarde lo que necesite
     });
   };
 
@@ -197,6 +209,9 @@ function App() {
       // ===== INYECCIÓN DE TEXTURAS =====
       if (shouldInject && config.data.textures && config.data.textures.length > 0) {
         console.log('Starting texture injection...');
+        setIsInjecting(true);
+        setInjectProgress(0);
+        setInjectMsg('Preparing resources...');
         
         try {
           const baseUrl = config.url || "https://night-studio-bedrock.github.io/night-launcher-data/";
@@ -212,9 +227,14 @@ function App() {
           });
           
           console.log('Texture injection result:', textureResult);
+          setInjectProgress(100);
+          setInjectMsg('Resources ready!');
         } catch (texError) {
           console.warn('Texture injection warning:', texError);
+          setInjectMsg('Resources (optional)');
           // No bloqueamos el launch si hay error en texturas
+        } finally {
+          setTimeout(() => setIsInjecting(false), 500);
         }
       }
 
@@ -312,12 +332,12 @@ function App() {
           </button>
 
           {/* DOWNLOAD CARD */}
-          <div className={`mt-2 bg-black/40 border border-white/10 rounded-2xl p-4 md:p-5 flex items-center gap-4 md:gap-5 w-[90%] max-w-[450px] backdrop-blur-md transition-all duration-500 transform pointer-events-auto ${isSyncing ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+          <div className={`mt-2 bg-black/40 border border-white/10 rounded-2xl p-4 md:p-5 flex items-center gap-4 md:gap-5 w-[90%] max-w-[450px] backdrop-blur-md transition-all duration-500 transform pointer-events-auto ${(isSyncing || isInjecting || isLaunching) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-bold text-white tracking-wide truncate">{windowTitle || 'Night Launcher'}</h3>
-              <p className="text-[10px] md:text-xs text-zinc-400 mt-1 truncate">{syncMsg}</p>
+              <p className="text-[10px] md:text-xs text-zinc-400 mt-1 truncate">{isInjecting ? injectMsg : isSyncing ? syncMsg : 'Launching...'}</p>
               <div className="w-full h-1.5 bg-white/10 rounded-full mt-3 md:mt-4 overflow-hidden">
-                <div className="h-full bg-purple-500 transition-all duration-500 ease-out" style={{ width: `${syncProgress}%`, backgroundColor: themeColor }} />
+                <div className="h-full bg-purple-500 transition-all duration-500 ease-out" style={{ width: `${isInjecting ? injectProgress : isSyncing ? syncProgress : 100}%`, backgroundColor: themeColor }} />
               </div>
             </div>
             {logoImg && <img src={logoImg} alt="Thumb" className="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-black/50 p-1.5 shadow-inner object-contain flex-shrink-0" />}
