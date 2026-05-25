@@ -408,11 +408,11 @@ function App() {
 
       console.log('=== LAUNCH SUCCESSFUL ===');
 
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Resetear botón más rápido
+      setIsLaunching(false);
     } catch (e) {
       console.error("Launch error:", e);
-    } finally {
-      setTimeout(() => setIsLaunching(false), 1000);
+      setIsLaunching(false);
     }
   };
 
@@ -505,17 +505,17 @@ function App() {
         </div>
 
         {/* BOTTOM CONTAINER */}
-        <div className="w-full flex items-end justify-between pointer-events-auto flex-shrink-0 mt-auto pt-4">
+        <div className="w-full flex items-end justify-between flex-shrink-0 mt-auto pt-4">
           {/* Left space (1/3) */}
           <div className="w-1/3 hidden md:block"></div>
 
           {/* Social centered (1/3) */}
-          <div className="w-1/3 flex justify-center">
+          <div className="w-1/3 flex justify-center pointer-events-auto">
             <SocialBar socialMedia={socialMedia} />
           </div>
 
           {/* Status and Settings right (1/3) */}
-          <div className="w-1/3 flex justify-end items-center gap-2 md:gap-4">
+          <div className="w-1/3 flex justify-end items-center gap-2 md:gap-4 pointer-events-auto">
             <div className="hidden md:block">
               <ServerStatusBox {...serverData} />
             </div>
