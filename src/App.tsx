@@ -61,7 +61,7 @@ function App() {
   const [syncMsg, setSyncMsg] = useState("Downloading Night Assets...");
   const [syncProgress, setSyncProgress] = useState(0);
   
-  const CONFIG_URL = "https://halo333x.github.io/bedrock-launcher/data.json";
+  const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/config.json";
 
   // ==========================================
   // MUSIC EFFECT
@@ -141,20 +141,20 @@ function App() {
   const handleLaunchClick = async () => {
     setIsLaunching(true);
     try {
-      // Verificar si está en iframe de Tauri
-      const isTauriFrame = window.parent !== window;
+      // Detectar si estamos embebidos en Tauri
+      const isTauriFrame = window !== window.top;
       
       console.log('=== LAUNCH BUTTON CLICKED ===');
-      console.log('Is Tauri frame:', isTauriFrame);
+      console.log('Is Tauri frame (window !== window.top):', isTauriFrame);
 
       if (!isTauriFrame) {
-        console.warn('Not in Tauri iframe');
+        console.warn('Not in Tauri iframe - window === window.top');
         setIsLaunching(false);
         return;
       }
 
       // Cargar config del repositorio
-      const configUrl = `https://halo333x.github.io/bedrock-launcher/data.json?nocache=${new Date().getTime()}`;
+      const configUrl = `https://night-studio-bedrock.github.io/night-launcher-data/config.json?nocache=${new Date().getTime()}`;
       console.log('Fetching config from:', configUrl);
 
       const configResponse = await fetch(configUrl);
@@ -169,31 +169,42 @@ function App() {
       console.log('Server URL:', serverUrl);
 
       // Usar postMessage para invocar Tauri desde el iframe
-      const result = await new Promise((resolve, reject) => {
+      const result = await new Promise<any>((resolve, reject) => {
         const id = Math.random().toString(36);
         
-        const listener = (event: any) => {
+        console.log('Creating message listener with id:', id);
+        
+        const listener = (event: MessageEvent) => {
+          console.log('Received message event:', event.data);
           if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
             window.removeEventListener('message', listener);
+            console.log('Got TAURI_RESULT:', event.data);
             resolve(event.data.result);
           } else if (event.data.type === 'TAURI_ERROR' && event.data.id === id) {
             window.removeEventListener('message', listener);
+            console.log('Got TAURI_ERROR:', event.data);
             reject(new Error(event.data.error));
           }
         };
         
         window.addEventListener('message', listener);
+        console.log('Message listener attached');
         
+        console.log('Sending postMessage to parent with TAURI_INVOKE');
         // Enviar mensaje al parent (Tauri wrapper)
-        window.parent.postMessage({
+        const messageData = {
           type: 'TAURI_INVOKE',
           id: id,
           command: 'launch_minecraft_with_url',
           args: { url: serverUrl }
-        }, '*');
+        };
+        console.log('Message to send:', messageData);
+        window.top?.postMessage(messageData, '*');
+        console.log('postMessage sent');
         
         // Timeout si no responde
         setTimeout(() => {
+          console.log('Timeout waiting for Tauri response');
           window.removeEventListener('message', listener);
           reject(new Error('Tauri invoke timeout'));
         }, 10000);
