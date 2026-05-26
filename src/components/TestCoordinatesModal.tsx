@@ -11,7 +11,7 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
   const [resolution, setResolution] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [clicks, setClicks] = useState<ClickRecord[]>([]);
-  const [saved, setSaved] = useState<string>('');
+  const [saved, setSaved] = useState<{ x: number; y: number } | null>(null);
 
   const invokeTauri = async (command: string, args: any = {}): Promise<any> => {
     return new Promise((resolve, reject) => {
@@ -86,14 +86,13 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
     };
 
     localStorage.setItem('buttonCoordinateMap', JSON.stringify(data));
-    setSaved(resolution);
+    setSaved({ x: lastClick.x, y: lastClick.y });
     alert(`✅ Saved! (${lastClick.x}, ${lastClick.y}) for ${resolution}`);
     setClicks([]);
   };
 
   const clearClicks = () => {
     setClicks([]);
-    setSaved('');
   };
 
   return (
@@ -119,11 +118,13 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
           <p className="text-xs text-zinc-400 leading-relaxed">
             1. Click "Start Recording"
             <br />
-            2. Go to Minecraft and click on the Continue button
+            2. Switch to Minecraft
             <br />
-            3. Come back and click "Save"
+            3. Click the Continue button
             <br />
-            Done! ✅
+            4. Return and click "Save"
+            <br />
+            5. Coordinates saved! ✅
           </p>
         </div>
 
@@ -136,18 +137,18 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
               : 'bg-purple-600 hover:bg-purple-500'
           }`}
         >
-          {isRecording ? '⏹️ Stop Recording' : '⏹️ Start Recording'}
+          {isRecording ? '⏹️ Stop Recording' : '▶️ Start Recording'}
         </button>
 
         {/* Clicks Display */}
         {clicks.length > 0 && (
-          <div className="mb-4 p-4 bg-black/40 rounded-lg border border-white/10 max-h-48 overflow-y-auto">
-            <p className="text-sm font-bold text-zinc-300 mb-3">Clicks recorded: {clicks.length}</p>
+          <div className="mb-4 p-4 bg-black/40 rounded-lg border border-white/10 max-h-40 overflow-y-auto">
+            <p className="text-sm font-bold text-zinc-300 mb-3">📍 Clicks recorded: {clicks.length}</p>
             <div className="space-y-2">
               {clicks.map((click, idx) => (
                 <div key={idx} className="text-xs bg-black/50 p-2 rounded border border-white/5">
                   <p className="text-purple-300 font-mono">
-                    Click {idx + 1}: X={click.x}, Y={click.y}
+                    #{idx + 1}: ({click.x}, {click.y})
                   </p>
                 </div>
               ))}
@@ -157,9 +158,15 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
 
         {/* Saved Status */}
         {saved && (
-          <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg text-sm mb-4">
-            <p className="text-green-300 font-bold">
-              ✅ Saved for {saved}!
+          <div className="p-4 bg-green-900/30 border border-green-500/50 rounded-lg mb-4">
+            <p className="text-green-300 font-bold mb-2">✅ Saved!</p>
+            <p className="text-sm text-green-200 font-mono">
+              X = {saved.x}
+              <br />
+              Y = {saved.y}
+            </p>
+            <p className="text-xs text-green-400 mt-2">
+              For resolution: {resolution}
             </p>
           </div>
         )}
@@ -178,23 +185,9 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
             disabled={clicks.length === 0}
             className="flex-1 py-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 rounded-lg font-bold text-sm transition-colors"
           >
-            💾 Save Last Click
+            💾 Save
           </button>
         </div>
-
-        {/* Export Button */}
-        <button
-          onClick={() => {
-            const data = localStorage.getItem('buttonCoordinateMap');
-            if (data) {
-              navigator.clipboard.writeText(data);
-              alert('📋 Copied to clipboard!');
-            }
-          }}
-          className="w-full py-2 mt-3 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-sm font-bold transition-colors"
-        >
-          📋 Copy Saved Data
-        </button>
       </div>
     </div>
   );
