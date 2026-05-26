@@ -7,7 +7,6 @@ import { SocialBar } from './components/SocialBar';
 import { ServerStatusBox } from './components/ServerStatusBox';
 import { SettingsModal } from './components/SettingsModal';
 import { ProfileCard } from './components/ProfileCard';
-import { TestCoordinatesModal } from './components/TestCoordinatesModal';
 import './App.css';
 
 function App() {
@@ -38,7 +37,6 @@ function App() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
-  const [showTestCoordinates, setShowTestCoordinates] = useState(false);
   const [gamertagInput, setGamertagInput] = useState(gamertag);
   
   const musicRef = useRef<Howl | null>(null);
@@ -69,21 +67,6 @@ function App() {
   const [injectionStartTime, setInjectionStartTime] = useState<number>(0);
   
   const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
-
-  // ==========================================
-  // KEYBOARD SHORTCUTS
-  // ==========================================
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Press 'P' to open test coordinates modal
-      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        setShowTestCoordinates(true);
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // ==========================================
   // MUSIC EFFECT
@@ -570,11 +553,6 @@ function App() {
           shouldInject={shouldInject}
           onInjectChange={setShouldInject}
         />
-      )}
-
-      {/* TEST COORDINATES MODAL */}
-      {showTestCoordinates && (
-        <TestCoordinatesModal onClose={() => setShowTestCoordinates(false)} />
       )}
     </div>
   );
