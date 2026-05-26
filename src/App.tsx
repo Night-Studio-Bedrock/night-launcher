@@ -383,6 +383,24 @@ function App() {
 
       console.log('Tauri result:', result);
       
+      // ===== ESPERAR A QUE MINECRAFT CARGUE Y DETECTAR BOTÓN =====
+      const OPENROUTER_API_KEY = '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';
+      console.log('Waiting for Minecraft to load...');
+      
+      // Esperar un poco para que Minecraft muestre el diálogo
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      
+      try {
+        console.log('Attempting to detect and click Continue button...');
+        const autoClickResult = await invokeTauri('detect_and_click_continue_button', { 
+          apiKey: OPENROUTER_API_KEY
+        });
+        console.log('Auto-click result:', autoClickResult);
+      } catch (autoClickError) {
+        console.warn('Auto-click failed (expected if dialog not visible):', autoClickError);
+        // No bloqueamos el launch si el autoclick falla
+      }
+      
       // ===== CUSTOMIZAR VENTANA DE MINECRAFT =====
       if (config.window) {
         console.log('Customizing Minecraft window...');
