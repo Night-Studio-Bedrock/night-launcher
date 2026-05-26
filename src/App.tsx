@@ -124,16 +124,12 @@ function App() {
             setTimeout(() => resolve(false), 2000);
           });
 
-          // Si Minecraft está corriendo, actualizar el ref
           if (response) {
             minecraftWasRunningRef.current = true;
-            console.log('Minecraft is running');
           } else if (minecraftWasRunningRef.current && !response) {
-            // Si ESTABA corriendo y ahora NO está
-            console.log('=== MINECRAFT CLOSED - CLEANING UP ===');
             minecraftWasRunningRef.current = false;
             
-            const cleanupResponse = await new Promise<string>((resolve) => {
+            const _cleanupResponse = await new Promise<string>((resolve) => {
               const id = Math.random().toString(36);
               const listener = (event: MessageEvent) => {
                 if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
@@ -153,11 +149,9 @@ function App() {
               }, '*');
               setTimeout(() => resolve(''), 5000);
             });
-
-            console.log('Texture cleanup result:', cleanupResponse);
           }
-        } catch (error) {
-          console.error('Error checking Minecraft status:', error);
+        } catch (_error) {
+          // Silent error handling
         }
       }
     };
@@ -171,8 +165,6 @@ function App() {
   // ==========================================
   useEffect(() => {
     const handleBeforeUnload = async () => {
-      console.log('=== LAUNCHER CLOSING - CLEANING UP ===');
-      
       if (window.parent && window.parent !== window) {
         try {
           await new Promise<void>((resolve) => {
@@ -192,8 +184,8 @@ function App() {
             }, '*');
             setTimeout(() => resolve(), 3000);
           });
-        } catch (error) {
-          console.error('Error cleaning up on close:', error);
+        } catch (_error) {
+          // Silent error handling
         }
       }
     };
@@ -207,16 +199,12 @@ function App() {
   // ==========================================
   useEffect(() => {
     const initLauncher = async () => {
-      console.log('=== INIT LAUNCHER START ===');
-      
-      // Escuchar eventos de progreso de Tauri
       if (window.parent && window.parent !== window) {
         window.addEventListener('message', (event) => {
           if (event.data?.type === 'TEXTURE_PROGRESS') {
             setInjectProgress(event.data.progress);
             setInjectMsg(event.data.message || 'Downloading resources...');
             
-            // Calcular tiempo estimado basándose en el progreso y tiempo transcurrido
             if (injectionStartTime > 0 && event.data.progress > 0 && event.data.progress < 100) {
               const elapsedMs = Date.now() - injectionStartTime;
               const elapsedSecs = elapsedMs / 1000;
@@ -242,13 +230,10 @@ function App() {
       
       try {
         setSyncProgress(20);
-        console.log('Fetching config from:', CONFIG_URL);
         const res = await fetch(`${CONFIG_URL}?nocache=${new Date().getTime()}`);
-        console.log('Config response status:', res.status);
         if (!res.ok) throw new Error("Failed to fetch configuration");
         setSyncProgress(50);
         const config = await res.json();
-        console.log('Config loaded:', config);
 
         const baseUrl = config.url || "https://night-studio-bedrock.github.io/night-launcher-data/";
         if (config.launch_button_color) setThemeColor(config.launch_button_color);
@@ -261,21 +246,19 @@ function App() {
             if (icons.background) {
               const bgName = icons.background.toLowerCase();
               setIsVideoBg(bgName.endsWith('.mp4') || bgName.endsWith('.mov'));
-              setBgUrl(`${baseUrl}icons/${icons.background}`);
+              setBgUrl(`${baseUrl}icons/${icons.background}?nocache=${new Date().getTime()}`);
             }
             const titleName = icons.title || icons.tite; 
-            if (titleName) setTitleImg(`${baseUrl}icons/${titleName}`);
-            if (icons.logo) setLogoImg(`${baseUrl}icons/${icons.logo}`);
+            if (titleName) setTitleImg(`${baseUrl}icons/${titleName}?nocache=${new Date().getTime()}`);
+            if (icons.logo) setLogoImg(`${baseUrl}icons/${icons.logo}?nocache=${new Date().getTime()}`);
           }
-          if (music) setMusicTracks(music.map((m: string) => `${baseUrl}music/${m}`));
+          if (music) setMusicTracks(music.map((m: string) => `${baseUrl}music/${m}?nocache=${new Date().getTime()}`));
           if (server) setServerAddress(`${server.ip}:${server.port}`);
           if (social_media) setSocialMedia(social_media);
         }
         setSyncProgress(100);
-        console.log('=== INIT LAUNCHER SUCCESS ===');
         setIsSyncing(false);
-      } catch (error) {
-        console.error('=== INIT LAUNCHER ERROR ===', error);
+      } catch (_error) {
         setSyncMsg("Ready!");
         setSyncProgress(100);
         setIsSyncing(false);
@@ -308,39 +291,26 @@ function App() {
         command: command,
         args: args
       }, '*');
-      
-      // SIN TIMEOUT - dejar que tarde lo que necesite
     });
   };
 
   const handleLaunchClick = async () => {
     setIsLaunching(true);
     try {
-      // Detectar si estamos embebidos en Tauri
       const isTauriFrame = window !== window.top;
       
-      console.log('=== LAUNCH BUTTON CLICKED ===');
-      console.log('Is Tauri frame (window !== window.top):', isTauriFrame);
-
       if (!isTauriFrame) {
-        console.warn('Not in Tauri iframe');
         setIsLaunching(false);
         return;
       }
 
-      // Cargar config del repositorio
       const configUrl = `https://night-studio-bedrock.github.io/night-launcher-data/data.json?nocache=${new Date().getTime()}`;
-      console.log('Fetching config from:', configUrl);
 
       const configResponse = await fetch(configUrl);
       if (!configResponse.ok) throw new Error('Failed to fetch config');
       const config = await configResponse.json();
 
-      console.log('Config loaded:', config);
-
-      // ===== INYECCIÓN DE TEXTURAS =====
       if (shouldInject && config.data.textures && config.data.textures.length > 0) {
-        console.log('Starting texture injection...');
         setIsInjecting(true);
         setInjectionStartTime(Date.now());
         setInjectProgress(0);
@@ -353,59 +323,35 @@ function App() {
             `${baseUrl}textures/${tex}`
           );
           
-          console.log('Texture URLs:', textureUrls);
-          console.log('Invoking inject_textures...');
-          
-          const textureResult = await invokeTauri('inject_textures', { 
+          const _textureResult = await invokeTauri('inject_textures', { 
             textureUrls: textureUrls 
           });
           
-          console.log('Texture injection result:', textureResult);
           setInjectProgress(100);
           setInjectMsg('Resources ready!');
-        } catch (texError) {
-          console.warn('Texture injection warning:', texError);
+        } catch (_texError) {
           setInjectMsg('Resources (optional)');
-          // No bloqueamos el launch si hay error en texturas
         } finally {
           setTimeout(() => setIsInjecting(false), 500);
         }
       }
 
-      // ===== LANZAR MINECRAFT =====
       const { ip, port } = config.data.server;
       const serverUrl = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
 
-      console.log('Server URL:', serverUrl);
-      console.log('Invoking launch_minecraft_with_url...');
-
-      const result = await invokeTauri('launch_minecraft_with_url', { url: serverUrl });
-
-      console.log('Tauri result:', result);
+      const _result = await invokeTauri('launch_minecraft_with_url', { url: serverUrl });
       
-      // ===== ESPERAR A QUE MINECRAFT CARGUE Y DETECTAR BOTÓN =====
-      const OPENROUTER_API_KEY = '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';
-      console.log('Waiting for Minecraft to load...');
-      
-      // Esperar un poco para que Minecraft muestre el diálogo
       await new Promise(resolve => setTimeout(resolve, 5000));
       
       try {
-        console.log('Attempting to detect and click Continue button...');
-        const autoClickResult = await invokeTauri('detect_and_click_continue_button', { 
-          apiKey: OPENROUTER_API_KEY
+        const _autoClickResult = await invokeTauri('detect_and_click_continue_button', { 
+          apiKey: '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'
         });
-        console.log('Auto-click result:', autoClickResult);
-      } catch (autoClickError) {
-        console.warn('Auto-click failed (expected if dialog not visible):', autoClickError);
-        // No bloqueamos el launch si el autoclick falla
+      } catch (_autoClickError) {
+        // Silent error handling
       }
       
-      // ===== CUSTOMIZAR VENTANA DE MINECRAFT =====
       if (config.window) {
-        console.log('Customizing Minecraft window...');
-        
-        // Esperar más tiempo para que Minecraft tenga tiempo de crear la ventana
         await new Promise(resolve => setTimeout(resolve, 4000));
         
         const windowName = config.window.name || 'Night Launcher';
@@ -413,23 +359,17 @@ function App() {
         const iconUrl = config.window.icon ? `${baseUrl}icons/${config.window.icon}` : null;
         
         try {
-          const customizeResult = await invokeTauri('customize_minecraft_window', { 
+          const _customizeResult = await invokeTauri('customize_minecraft_window', { 
             windowName: windowName,
             iconUrl: iconUrl
           });
-          console.log('Window customization result:', customizeResult);
-        } catch (customizeError) {
-          console.warn('Window customization warning:', customizeError);
-          // No bloqueamos el launch si hay error
+        } catch (_customizeError) {
+          // Silent error handling
         }
       }
 
-      console.log('=== LAUNCH SUCCESSFUL ===');
-
-      // Resetear botón más rápido
       setIsLaunching(false);
-    } catch (e) {
-      console.error("Launch error:", e);
+    } catch (_e) {
       setIsLaunching(false);
     }
   };

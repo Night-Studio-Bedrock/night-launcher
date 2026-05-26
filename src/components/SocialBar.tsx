@@ -16,6 +16,19 @@ interface SocialBarProps {
 }
 
 export const SocialBar = ({ socialMedia }: SocialBarProps) => {
+  const handleOpenLink = (url: string) => {
+    if (window.parent && window.parent !== window) {
+      // En Tauri, usamos postMessage para abrir URLs
+      window.parent.postMessage({
+        type: 'OPEN_LINK',
+        url: url
+      }, '*');
+    } else {
+      // Fallback para navegador normal
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <div className="justify-self-center flex gap-4 pb-2">
       {Object.entries(socialMedia).map(([platform, url]) => {
@@ -26,16 +39,14 @@ export const SocialBar = ({ socialMedia }: SocialBarProps) => {
         };
 
         return (
-          <a 
+          <button
             key={platformKey}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
+            onClick={() => handleOpenLink(url)}
             title={platform.charAt(0).toUpperCase() + platform.slice(1)}
             className={`p-3 bg-black/40 rounded-full border border-white/10 transition-colors cursor-pointer ${config.hoverColor}`}
           >
             {config.svg}
-          </a>
+          </button>
         );
       })}
     </div>
