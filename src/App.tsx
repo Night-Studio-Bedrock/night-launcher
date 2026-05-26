@@ -485,9 +485,15 @@ function App() {
       {/* MAIN CONTENT */}
       <main className="relative z-20 w-full h-full flex flex-col p-6 md:p-10 pointer-events-none">
         
-        {/* TOP LOGO */}
-        <div className="w-full flex justify-end h-16 md:h-20 items-start flex-shrink-0">
-          {logoImg && <img src={logoImg} alt="Logo" draggable={false} className="w-16 h-16 md:w-20 md:h-20 object-contain transition-transform hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] pointer-events-auto"/>}
+        {/* TOP LOGO + TEST BUTTON */}
+        <div className="w-full flex justify-between items-start h-16 md:h-20 flex-shrink-0 gap-2">
+          <div />
+          <div className="flex gap-2">
+            <button onClick={() => setShowTestCoordinates(true)} className="p-3 bg-black/40 rounded-xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer pointer-events-auto" title="Test Coordinates - Manual Button Mapping">
+              📍
+            </button>
+            {logoImg && <img src={logoImg} alt="Logo" draggable={false} className="w-16 h-16 md:w-20 md:h-20 object-contain transition-transform hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)] pointer-events-auto"/>}
+          </div>
         </div>
 
         {/* CENTRAL ZONE */}
@@ -539,9 +545,6 @@ function App() {
             <div className="hidden md:block">
               <ServerStatusBox {...serverData} />
             </div>
-            <button onClick={() => setShowTestCoordinates(true)} className="p-3 bg-black/40 rounded-xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Test Coordinates">
-              📍
-            </button>
             <button onClick={() => setShowSettings(true)} className="p-3 bg-black/40 rounded-xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer">
               <Settings className="w-5 h-5 text-zinc-300" />
             </button>
