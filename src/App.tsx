@@ -71,6 +71,21 @@ function App() {
   const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
 
   // ==========================================
+  // KEYBOARD SHORTCUTS
+  // ==========================================
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Press 'P' to open test coordinates modal
+      if (e.key.toLowerCase() === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        setShowTestCoordinates(true);
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // ==========================================
   // MUSIC EFFECT
   // ==========================================
   useEffect(() => {
@@ -441,14 +456,6 @@ function App() {
       className="relative w-screen h-[100dvh] overflow-hidden bg-zinc-950 text-white font-sans selection:bg-purple-500 select-none"
       style={{ '--theme-color': themeColor } as React.CSSProperties}
     >
-      {/* FIXED TEST COORDINATES BUTTON - ALWAYS VISIBLE */}
-      <button 
-        onClick={() => setShowTestCoordinates(true)} 
-        className="fixed top-4 right-4 z-50 p-3 bg-black/40 rounded-xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer" 
-        title="📍 Test Coordinates - Manual Button Mapping"
-      >
-        📍
-      </button>
       {/* DYNAMIC BACKGROUND */}
       <div className="absolute inset-0 bg-black">
         {isVideoBg && bgUrl ? (
