@@ -129,7 +129,8 @@ function App() {
           } else if (minecraftWasRunningRef.current && !response) {
             minecraftWasRunningRef.current = false;
             
-            const _cleanupResponse = await new Promise<string>((resolve) => {
+            // Cleanup without storing result
+            void new Promise<string>((resolve) => {
               const id = Math.random().toString(36);
               const listener = (event: MessageEvent) => {
                 if (event.data.type === 'TAURI_RESULT' && event.data.id === id) {
@@ -150,7 +151,7 @@ function App() {
               setTimeout(() => resolve(''), 5000);
             });
           }
-        } catch (_error) {
+        } catch (error) {
           // Silent error handling
         }
       }
@@ -184,7 +185,7 @@ function App() {
             }, '*');
             setTimeout(() => resolve(), 3000);
           });
-        } catch (_error) {
+        } catch (error) {
           // Silent error handling
         }
       }
@@ -258,7 +259,7 @@ function App() {
         }
         setSyncProgress(100);
         setIsSyncing(false);
-      } catch (_error) {
+      } catch (error) {
         setSyncMsg("Ready!");
         setSyncProgress(100);
         setIsSyncing(false);
@@ -323,13 +324,13 @@ function App() {
             `${baseUrl}textures/${tex}`
           );
           
-          const _textureResult = await invokeTauri('inject_textures', { 
+          void invokeTauri('inject_textures', { 
             textureUrls: textureUrls 
           });
           
           setInjectProgress(100);
           setInjectMsg('Resources ready!');
-        } catch (_texError) {
+        } catch (texError) {
           setInjectMsg('Resources (optional)');
         } finally {
           setTimeout(() => setIsInjecting(false), 500);
@@ -339,15 +340,15 @@ function App() {
       const { ip, port } = config.data.server;
       const serverUrl = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
 
-      const _result = await invokeTauri('launch_minecraft_with_url', { url: serverUrl });
+      void invokeTauri('launch_minecraft_with_url', { url: serverUrl });
       
       await new Promise(resolve => setTimeout(resolve, 5000));
       
       try {
-        const _autoClickResult = await invokeTauri('detect_and_click_continue_button', { 
+        void invokeTauri('detect_and_click_continue_button', { 
           apiKey: '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'
         });
-      } catch (_autoClickError) {
+      } catch (autoClickError) {
         // Silent error handling
       }
       
@@ -359,17 +360,17 @@ function App() {
         const iconUrl = config.window.icon ? `${baseUrl}icons/${config.window.icon}` : null;
         
         try {
-          const _customizeResult = await invokeTauri('customize_minecraft_window', { 
+          void invokeTauri('customize_minecraft_window', { 
             windowName: windowName,
             iconUrl: iconUrl
           });
-        } catch (_customizeError) {
+        } catch (customizeError) {
           // Silent error handling
         }
       }
 
       setIsLaunching(false);
-    } catch (_e) {
+    } catch (e) {
       setIsLaunching(false);
     }
   };
