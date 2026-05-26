@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
-interface ClickRecord {
-  x: number;
-  y: number;
-  timestamp: number;
-}
-
 export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
   const [resolution, setResolution] = useState('');
   const [isRecording, setIsRecording] = useState(false);
-  const [clicks, setClicks] = useState<ClickRecord[]>([]);
-  const [manualX, setManualX] = useState(640);
-  const [manualY, setManualY] = useState(360);
+  const [clicks, setClicks] = useState<Array<{x: number; y: number}>>([]);
   const [saved, setSaved] = useState<{ x: number; y: number } | null>(null);
 
   const invokeTauri = async (command: string, args: any = {}): Promise<any> => {
@@ -41,33 +33,6 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
     getResolution();
   }, []);
 
-  useEffect(() => {
-    if (!isRecording) return;
-
-    // Registrar clicks en toda la pantalla
-    const handleClick = (e: MouseEvent) => {
-      // No registrar clicks dentro del modal
-      const modal = document.querySelector('[data-modal="coordinates"]');
-      if (modal && modal.contains(e.target as Node)) {
-        return;
-      }
-
-      const clickData: ClickRecord = {
-        x: e.clientX,
-        y: e.clientY,
-        timestamp: Date.now()
-      };
-
-      setClicks(prev => [...prev, clickData]);
-      setManualX(clickData.x);
-      setManualY(clickData.y);
-      console.log(`📍 Registered click at (${clickData.x}, ${clickData.y})`);
-    };
-
-    window.addEventListener('click', handleClick, true);
-    return () => window.removeEventListener('click', handleClick, true);
-  }, [isRecording]);
-
   const getResolution = async () => {
     try {
       const res = await invokeTauri('get_screen_resolution');
@@ -77,91 +42,116 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const startRecording = async () => {
+    try {
+      await invokeTauri('start_click_recording');
+      setIsRecording(true);
+      setClicks([]);
+      setSaved(null);
+    } catch (e) {
+      alert('Error starting recording: ' + e);
+    }
+  };
+
+  const stopRecording = async () => {
+    try {
+      await invokeTauri('stop_click_recording');
+      setIsRecording(false);
+      
+      // Obtener clicks registrados
+      const clicksJson = await invokeTauri('get_recorded_clicks');
+      const clicksList = JSON.parse(clicksJson);
+      setClicks(clicksList);
+    } catch (e) {
+      alert('Error stopping recording: ' + e);
+    }
+  };
+
   const saveCoordinates = () => {
+    if (clicks.length === 0) {
+      alert('No clicks recorded!');
+      return;
+    }
+
+    const lastClick = clicks[clicks.length - 1];
     const data = {
-      [resolution]: { x: manualX, y: manualY }
+      [resolution]: { x: lastClick.x, y: lastClick.y }
     };
 
     localStorage.setItem('buttonCoordinateMap', JSON.stringify(data));
-    setSaved({ x: manualX, y: manualY });
-    alert(`✅ Saved (${manualX}, ${manualY}) for ${resolution}`);
-  };
-
-  const clearClicks = () => {
-    setClicks([]);
-    setSaved(null);
+    setSaved({ x: lastClick.x, y: lastClick.y });
+    alert(`✅ Saved (${lastClick.x}, ${lastClick.y}) for ${resolution}`);
   };
 
   return (
-    <div data-modal="coordinates" className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/80 backdrop-blur-sm overflow-auto">
-      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl my-auto">
+    <div data-modal="coordinates" className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/80 backdrop-blur-sm">
+      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl">
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold text-purple-400">📍 Click Recorder</h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
+          <h2 className="text-xl font-bold text-purple-400">📍 Click Recorder (Rust)</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Resolution Display */}
+        {/* Resolution */}
         <div className="mb-4 p-3 bg-black/40 rounded-lg border border-white/10">
-          <p className="text-xs text-zinc-400 mb-1">Resolution:</p>
-          <p className="text-2xl font-bold text-purple-300">{resolution || 'Loading...'}</p>
+          <p className="text-xs text-zinc-400">Resolution:</p>
+          <p className="text-2xl font-bold text-purple-300">{resolution || '...'}</p>
+        </div>
+
+        {/* Instructions */}
+        <div className="mb-4 p-3 bg-blue-900/30 border border-blue-500/30 rounded-lg text-xs text-zinc-300">
+          <p>
+            <strong>Steps:</strong>
+            <br />
+            1. Click "Start Recording"
+            <br />
+            2. Click the Continue button in Minecraft
+            <br />
+            3. Click "Stop Recording"
+            <br />
+            4. Coordinates appear below
+            <br />
+            5. Click "Save" ✅
+          </p>
         </div>
 
         {/* Recording Status */}
         {isRecording && (
           <div className="mb-4 p-3 bg-red-900/30 border border-red-500/50 rounded-lg animate-pulse">
-            <p className="text-red-300 font-bold text-sm">🔴 RECORDING - Click the Continue button</p>
+            <p className="text-red-300 font-bold text-sm">🔴 RECORDING - Click anywhere</p>
           </div>
         )}
 
         {/* Recording Toggle */}
-        <button
-          onClick={() => setIsRecording(!isRecording)}
-          className={`w-full py-3 rounded-lg font-bold text-lg transition-colors mb-4 ${
-            isRecording
-              ? 'bg-red-600 hover:bg-red-500 animate-pulse'
-              : 'bg-purple-600 hover:bg-purple-500'
-          }`}
-        >
-          {isRecording ? '⏹️ Stop Recording' : '▶️ Start Recording'}
-        </button>
-
-        {/* Manual Coordinates */}
-        <div className="mb-4 p-4 bg-black/40 rounded-lg border border-white/10">
-          <p className="text-sm font-bold text-zinc-300 mb-3">📍 Button Position:</p>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-zinc-400 block mb-1">X</label>
-              <input
-                type="number"
-                value={manualX}
-                onChange={(e) => setManualX(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white font-bold text-center text-lg"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-zinc-400 block mb-1">Y</label>
-              <input
-                type="number"
-                value={manualY}
-                onChange={(e) => setManualY(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white font-bold text-center text-lg"
-              />
-            </div>
-          </div>
-        </div>
+        {!isRecording ? (
+          <button
+            onClick={startRecording}
+            className="w-full py-3 rounded-lg font-bold text-lg transition-colors mb-4 bg-purple-600 hover:bg-purple-500"
+          >
+            ▶️ Start Recording
+          </button>
+        ) : (
+          <button
+            onClick={stopRecording}
+            className="w-full py-3 rounded-lg font-bold text-lg transition-colors mb-4 bg-red-600 hover:bg-red-500 animate-pulse"
+          >
+            ⏹️ Stop Recording
+          </button>
+        )}
 
         {/* Clicks Display */}
         {clicks.length > 0 && (
-          <div className="mb-4 p-3 bg-black/40 rounded-lg border border-white/10 max-h-32 overflow-y-auto">
-            <p className="text-xs font-bold text-zinc-300 mb-2">📍 Clicks: {clicks.length}</p>
-            <div className="space-y-1 text-xs">
-              {clicks.slice(-5).map((click, idx) => (
-                <p key={idx} className="text-purple-300 font-mono">
-                  #{clicks.length - 5 + idx + 1}: ({click.x}, {click.y})
-                </p>
+          <div className="mb-4 p-4 bg-black/40 rounded-lg border border-white/10 max-h-40 overflow-y-auto">
+            <p className="text-sm font-bold text-zinc-300 mb-3">📍 Clicks: {clicks.length}</p>
+            <div className="space-y-2">
+              {clicks.map((click, idx) => (
+                <div key={idx} className="text-xs bg-black/50 p-2 rounded border border-white/5">
+                  <p className="text-purple-300 font-mono">
+                    #{idx + 1}: ({click.x}, {click.y})
+                  </p>
+                </div>
               ))}
             </div>
           </div>
@@ -169,32 +159,21 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
 
         {/* Saved Status */}
         {saved && (
-          <div className="p-4 bg-green-900/30 border border-green-500/50 rounded-lg mb-4">
-            <p className="text-green-300 font-bold mb-2">✅ Saved!</p>
-            <p className="text-sm text-green-200 font-mono">
-              X = {saved.x} | Y = {saved.y}
-            </p>
-            <p className="text-xs text-green-400 mt-2">
-              Resolution: {resolution}
+          <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg mb-4">
+            <p className="text-green-300 text-xs font-bold">
+              ✅ Saved: ({saved.x}, {saved.y}) for {resolution}
             </p>
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={clearClicks}
-            className="flex-1 py-2 bg-zinc-700 hover:bg-zinc-600 rounded-lg font-bold text-sm transition-colors"
-          >
-            🗑️ Clear
-          </button>
-          <button
-            onClick={saveCoordinates}
-            className="flex-1 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-sm transition-colors"
-          >
-            💾 Save
-          </button>
-        </div>
+        {/* Action Button */}
+        <button
+          onClick={saveCoordinates}
+          disabled={clicks.length === 0}
+          className="w-full py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-lg font-bold text-sm transition-colors"
+        >
+          💾 Save Last Click
+        </button>
       </div>
     </div>
   );
