@@ -7,6 +7,7 @@ import { SocialBar } from './components/SocialBar';
 import { ServerStatusBox } from './components/ServerStatusBox';
 import { SettingsModal } from './components/SettingsModal';
 import { ProfileCard } from './components/ProfileCard';
+import { TestCoordinatesModal } from './components/TestCoordinatesModal';
 import './App.css';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showTestCoordinates, setShowTestCoordinates] = useState(false);
   const [gamertagInput, setGamertagInput] = useState(gamertag);
   
   const musicRef = useRef<Howl | null>(null);
@@ -537,6 +539,9 @@ function App() {
             <div className="hidden md:block">
               <ServerStatusBox {...serverData} />
             </div>
+            <button onClick={() => setShowTestCoordinates(true)} className="p-3 bg-black/40 rounded-xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer" title="Test Coordinates">
+              📍
+            </button>
             <button onClick={() => setShowSettings(true)} className="p-3 bg-black/40 rounded-xl border border-white/10 hover:bg-white/20 transition-all cursor-pointer">
               <Settings className="w-5 h-5 text-zinc-300" />
             </button>
@@ -553,6 +558,11 @@ function App() {
           shouldInject={shouldInject}
           onInjectChange={setShouldInject}
         />
+      )}
+
+      {/* TEST COORDINATES MODAL */}
+      {showTestCoordinates && (
+        <TestCoordinatesModal onClose={() => setShowTestCoordinates(false)} />
       )}
     </div>
   );
