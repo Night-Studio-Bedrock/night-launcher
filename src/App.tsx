@@ -372,19 +372,14 @@ function App() {
         }
       }
 
-      // ===== LANZAR MINECRAFT CON BEDROCKCONNECT =====
+      // ===== LANZAR MINECRAFT =====
       const { ip, port } = config.data.server;
-      const serverName = config.window?.name || 'Night Launcher';
+      const serverUrl = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
 
-      console.log('Launching Minecraft with BedrockConnect...');
-      console.log(`Server: ${serverName} (${ip}:${port})`);
-      console.log('Invoking launch_minecraft_with_bedrockconnect...');
+      console.log('Server URL:', serverUrl);
+      console.log('Invoking launch_minecraft_with_url...');
 
-      const result = await invokeTauri('launch_minecraft_with_bedrockconnect', { 
-        serverName: serverName,
-        serverIp: ip,
-        serverPort: port
-      });
+      const result = await invokeTauri('launch_minecraft_with_url', { url: serverUrl });
 
       console.log('Tauri result:', result);
       
