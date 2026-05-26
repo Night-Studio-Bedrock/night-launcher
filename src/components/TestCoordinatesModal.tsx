@@ -71,95 +71,85 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 w-full max-w-xl shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 bg-black/80 backdrop-blur-sm overflow-auto">
+      <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-2xl shadow-2xl my-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-purple-400">📍 Button Coordinates</h2>
-          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg">
-            <X className="w-6 h-6" />
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-purple-400">📍 Button Coordinates</h2>
+          <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-lg flex-shrink-0">
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Resolution Display */}
-        <div className="mb-6 p-4 bg-black/40 rounded-lg border border-white/10">
-          <p className="text-sm text-zinc-400 mb-2">Current Screen Resolution:</p>
-          <p className="text-3xl font-bold text-purple-300">{resolution || 'Loading...'}</p>
+        <div className="mb-4 p-3 bg-black/40 rounded-lg border border-white/10">
+          <p className="text-xs text-zinc-400 mb-1">Resolution:</p>
+          <p className="text-2xl font-bold text-purple-300">{resolution || 'Loading...'}</p>
         </div>
 
-        {/* Screenshot */}
-        <div className="mb-6">
-          <button
-            onClick={captureScreenshot}
-            className="w-full py-3 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold transition-colors mb-3"
-          >
-            📸 Capture Screenshot
-          </button>
-          {screenshot && (
-            <div className="border border-white/10 rounded-lg overflow-hidden max-h-64">
-              <img src={screenshot} alt="screenshot" className="w-full" />
-            </div>
-          )}
-        </div>
-
-        {/* Instructions */}
-        <div className="mb-6 p-4 bg-blue/10 border border-blue-500/30 rounded-lg">
-          <p className="text-sm text-zinc-300">
-            <strong>How to use:</strong>
-            <br />
-            1. Take a screenshot of the Minecraft dialog
-            <br />
-            2. Adjust X and Y to point at the Continue button
-            <br />
-            3. Click the button to test
-            <br />
-            4. Save when correct ✅
+        {/* Instructions - Compact */}
+        <div className="mb-4 p-3 bg-blue/10 border border-blue-500/30 rounded-lg text-xs">
+          <p className="text-zinc-300">
+            <strong>Steps:</strong> Screenshot → Adjust X,Y → Test Click → Save ✅
           </p>
         </div>
 
-        {/* Coordinates Input */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* Coordinates Input - Side by side */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
           <div>
-            <label className="text-sm text-zinc-400 block mb-2">X Position</label>
+            <label className="text-xs text-zinc-400 block mb-1">X</label>
             <input
               type="number"
               value={x}
               onChange={(e) => setX(parseInt(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-lg font-bold text-center"
+              className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white font-bold text-center text-lg"
             />
           </div>
           <div>
-            <label className="text-sm text-zinc-400 block mb-2">Y Position</label>
+            <label className="text-xs text-zinc-400 block mb-1">Y</label>
             <input
               type="number"
               value={y}
               onChange={(e) => setY(parseInt(e.target.value) || 0)}
-              className="w-full px-4 py-2 bg-black/50 border border-white/10 rounded-lg text-white text-lg font-bold text-center"
+              className="w-full px-3 py-2 bg-black/50 border border-white/10 rounded-lg text-white font-bold text-center text-lg"
             />
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex gap-3 mb-6">
+        {/* Action Buttons - Compact */}
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={captureScreenshot}
+            className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-bold text-sm transition-colors"
+          >
+            📸 Screenshot
+          </button>
           <button
             onClick={clickAt}
-            className="flex-1 py-3 bg-green-600 hover:bg-green-500 rounded-lg font-bold transition-colors"
+            className="flex-1 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-bold text-sm transition-colors"
           >
-            🖱️ Test Click
+            🖱️ Test
           </button>
           <button
             onClick={saveCoords}
-            className="flex-1 py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold transition-colors"
+            className="flex-1 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-sm transition-colors"
           >
-            💾 Save ({resolution})
+            💾 Save
           </button>
         </div>
 
+        {/* Screenshot Preview - Scrollable */}
+        {screenshot && (
+          <div className="mb-4 border border-white/10 rounded-lg overflow-auto max-h-48">
+            <img src={screenshot} alt="screenshot" className="w-full" />
+          </div>
+        )}
+
         {/* Saved Status */}
         {saved && (
-          <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg">
-            <p className="text-green-300 text-sm font-bold">
-              ✅ Saved! X={x}, Y={y} for {saved}
+          <div className="p-3 bg-green-900/30 border border-green-500/50 rounded-lg text-sm">
+            <p className="text-green-300 font-bold">
+              ✅ Saved ({saved}): X={x}, Y={y}
             </p>
           </div>
         )}
@@ -170,14 +160,12 @@ export function TestCoordinatesModal({ onClose }: { onClose: () => void }) {
             const data = localStorage.getItem('buttonCoordinateMap');
             if (data) {
               navigator.clipboard.writeText(data);
-              alert('📋 Coordinates copied to clipboard!');
-            } else {
-              alert('No coordinates saved yet');
+              alert('📋 Copied!');
             }
           }}
-          className="w-full py-2 mt-6 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-sm font-bold transition-colors"
+          className="w-full py-2 mt-4 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-sm font-bold transition-colors"
         >
-          📋 Copy Saved Data
+          📋 Copy Data
         </button>
       </div>
     </div>
