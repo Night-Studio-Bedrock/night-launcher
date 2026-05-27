@@ -96,35 +96,71 @@ function App() {
   const isAndroid = /Android/i.test(navigator.userAgent);
 
   // ==========================================
-  // MUSIC EFFECT
+  // MUSIC EFFECT - COMPATIBLE CON ANDROID Y DESKTOP
   // ==========================================
   useEffect(() => {
-    // NO REPRODUCIR MÚSICA EN ANDROID WebView
-    if (isAndroid || musicTracks.length === 0 || !Howl) return;
+    if (musicTracks.length === 0) return;
 
-    const playRandomTrack = (currentIndex?: number) => {
-      let nextIndex = Math.floor(Math.random() * musicTracks.length);
-      if (musicTracks.length > 1 && nextIndex === currentIndex)
-        nextIndex = (nextIndex + 1) % musicTracks.length;
-      if (musicRef.current) musicRef.current.unload();
-      musicRef.current = new Howl({
-        src: [musicTracks[nextIndex]],
-        html5: true,
-        autoplay: true,
-        volume: volumeRef.current / 100,
-        onend: () => playRandomTrack(nextIndex),
-      });
-    };
-    playRandomTrack();
+    if (isAndroid) {
+      // EN ANDROID: Usar <audio> HTML5 nativo
+      let audioElement = musicRef.current as HTMLAudioElement;
+      if (!audioElement) {
+        audioElement = new Audio();
+        audioElement.loop = false;
+        audioElement.volume = bgVolume / 100;
+        musicRef.current = audioElement;
+      }
+
+      const playRandomTrack = () => {
+        const nextIndex = Math.floor(Math.random() * musicTracks.length);
+        audioElement.src = musicTracks[nextIndex];
+        audioElement.play().catch((e) => {
+          console.warn("Audio autoplay blocked on Android:", e);
+        });
+      };
+
+      audioElement.onended = playRandomTrack;
+      playRandomTrack();
+    } else if (Howl) {
+      // EN DESKTOP: Usar Howler
+      const playRandomTrack = (currentIndex?: number) => {
+        let nextIndex = Math.floor(Math.random() * musicTracks.length);
+        if (
+          musicTracks.length > 1 &&
+          nextIndex === currentIndex
+        )
+          nextIndex = (nextIndex + 1) % musicTracks.length;
+        if (musicRef.current) musicRef.current.unload();
+        musicRef.current = new Howl({
+          src: [musicTracks[nextIndex]],
+          html5: true,
+          autoplay: true,
+          volume: volumeRef.current / 100,
+          onend: () => playRandomTrack(nextIndex),
+        });
+      };
+      playRandomTrack();
+    }
+
     return () => {
-      musicRef.current?.unload();
+      if (isAndroid) {
+        const audioElement = musicRef.current as HTMLAudioElement;
+        if (audioElement) audioElement.pause();
+      } else {
+        musicRef.current?.unload();
+      }
     };
   }, [musicTracks, isAndroid]);
 
   useEffect(() => {
     volumeRef.current = bgVolume;
-    musicRef.current?.volume(bgVolume / 100);
-  }, [bgVolume]);
+    if (isAndroid) {
+      const audioElement = musicRef.current as HTMLAudioElement;
+      if (audioElement) audioElement.volume = bgVolume / 100;
+    } else {
+      musicRef.current?.volume(bgVolume / 100);
+    }
+  }, [bgVolume, isAndroid]);
 
   // ==========================================
   // MONITOREAR CIERRE DE MINECRAFT
@@ -327,7 +363,8 @@ function App() {
                 `${baseUrl}icons/${icons.logo}?nocache=${new Date().getTime()}`,
               );
           }
-          if (music && !isAndroid)
+          // EN ANDROID, AHORA SI CARGAMOS MUSICA (con <audio> nativo)
+          if (music)
             setMusicTracks(
               music.map(
                 (m: string) =>
@@ -383,7 +420,7 @@ function App() {
     try {
       const isTauriFrame = window !== window.top;
 
-      if (!isTauriFrame) {
+      if (!isTauriFrame && !isAndroid) {
         setIsLaunching(false);
         return;
       }
@@ -393,6 +430,13 @@ function App() {
       const configResponse = await fetch(configUrl);
       if (!configResponse.ok) throw new Error("Failed to fetch config");
       const config = await configResponse.json();
+
+      if (isAndroid) {
+        // EN ANDROID: No hacer nada por ahora (será la inyección después)
+        console.log("Android launch detected - waiting for injection support");
+        setTimeout(() => setIsLaunching(false), 2000);
+        return;
+      }
 
       if (
         shouldInject &&
@@ -468,6 +512,8 @@ function App() {
       setIsLaunching(false);
     }
   };
+
+  const isButtonDisabled = isLaunching || isSyncing;
 
   return (
     <div
@@ -550,7 +596,6 @@ function App() {
       )}
 
       {/* MAIN CONTENT */}
-      {/* MAIN CONTENT */}
       <main
         className="relative z-20 flex flex-col p-4 sm:p-6 pointer-events-none"
         style={{ width: "100vw", height: "100vh" }}
@@ -584,19 +629,25 @@ function App() {
 
           <button
             onClick={handleLaunchClick}
-            disabled={isLaunching || isSyncing}
-            className={`rocket-button group pointer-events-auto origin-center ${isAndroid ? "scale-75 -mt-2" : "scale-100"} ${isLaunching ? "launch-state" : isSyncing ? "sync-state" : ""}`}
+            disabled={isButtonDisabled}
+            className={`rocket-button group pointer-events-auto origin-center cursor-pointer ${isAndroid ? "scale-75 -mt-2" : "scale-100"} ${isLaunching ? "launch-state" : isSyncing ? "sync-state" : ""} ${isButtonDisabled ? "opacity-50" : "opacity-100"}`}
           >
             <Rocket
               className={`w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 ${isLaunching ? "rotate-45 text-green-500" : isSyncing ? "animate-pulse text-zinc-500" : "group-hover:-rotate-12 group-hover:-translate-y-1"}`}
               style={{
-                color: !isLaunching && !isSyncing ? themeColor : undefined,
+                color:
+                  !isButtonDisabled && !isLaunching && !isSyncing
+                    ? themeColor
+                    : undefined,
               }}
             />
             <span
               className={`text-lg md:text-xl font-bold tracking-widest ${isLaunching ? "animate-pulse text-green-500" : isSyncing ? "text-zinc-500" : ""}`}
               style={{
-                color: !isLaunching && !isSyncing ? themeColor : undefined,
+                color:
+                  !isButtonDisabled && !isLaunching && !isSyncing
+                    ? themeColor
+                    : undefined,
               }}
             >
               {isLaunching ? "LAUNCHING..." : isSyncing ? "WAIT..." : "LAUNCH"}
@@ -664,7 +715,7 @@ function App() {
               transformOrigin: "bottom center",
             }}
           >
-            <SocialBar socialMedia={socialMedia} />
+            <SocialBar socialMedia={socialMedia} isAndroid={isAndroid} />
           </div>
 
           {/* 3. DERECHA: Status y Settings */}

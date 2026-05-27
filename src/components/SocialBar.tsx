@@ -13,18 +13,41 @@ const SOCIAL_ICONS: Record<string, { hoverColor: string, svg: React.ReactNode }>
 
 interface SocialBarProps {
   socialMedia: Record<string, string>;
+  isAndroid?: boolean;
 }
 
-export const SocialBar = ({ socialMedia }: SocialBarProps) => {
-  const handleOpenLink = (url: string) => {
-    if (window.parent && window.parent !== window) {
-      // En Tauri, usamos postMessage para abrir URLs
+export const SocialBar = ({ socialMedia, isAndroid = false }: SocialBarProps) => {
+  const handleOpenLink = (platform: string, url: string) => {
+    if (isAndroid && platform.toLowerCase() === 'discord') {
+      // EN ANDROID: Intentar abrir Discord con intent
+      try {
+        // Intentar abrir Discord app primero
+        const discordServerUrl = url; // e.g., "https://discord.gg/..."
+        // Extraer invite code si es posible
+        const match = url.match(/discord\.gg\/(\w+)/);
+        if (match) {
+          const inviteCode = match[1];
+          // Intent de Discord app
+          window.location.href = `discord://servers/${inviteCode}`;
+          // Si falla, fallback a navegador después de 500ms
+          setTimeout(() => {
+            window.open(discordServerUrl, '_blank');
+          }, 500);
+        } else {
+          // Fallback directo a navegador si no es invite válido
+          window.open(url, '_blank');
+        }
+      } catch (e) {
+        window.open(url, '_blank');
+      }
+    } else if (window.parent && window.parent !== window) {
+      // EN TAURI: Usar postMessage
       window.parent.postMessage({
         type: 'OPEN_LINK',
         url: url
       }, '*');
     } else {
-      // Fallback para navegador normal
+      // EN NAVEGADOR NORMAL: Abrir con window.open
       window.open(url, '_blank');
     }
   };
@@ -41,7 +64,7 @@ export const SocialBar = ({ socialMedia }: SocialBarProps) => {
         return (
           <button
             key={platformKey}
-            onClick={() => handleOpenLink(url)}
+            onClick={() => handleOpenLink(platformKey, url)}
             title={platform.charAt(0).toUpperCase() + platform.slice(1)}
             className={`p-3 bg-black/40 rounded-full border border-white/10 transition-colors cursor-pointer ${config.hoverColor}`}
           >
