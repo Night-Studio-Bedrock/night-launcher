@@ -5,7 +5,7 @@ interface ProfileCardProps {
 
 export const ProfileCard = ({ gamertag, onEditClick }: ProfileCardProps) => {
   return (
-    <div className="fixed bottom-3 sm:bottom-6 md:bottom-10 left-3 sm:left-6 z-40 pointer-events-auto">
+    <div className="pointer-events-auto">
       <div className="bg-black/40 backdrop-blur-md rounded-lg border border-white/10 px-2.5 sm:px-4 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 shadow-lg hover:bg-black/60 transition-all cursor-pointer" onClick={onEditClick}>
         <img 
           src={gamertag ? `https://mc-heads.net/avatar/${gamertag}` : `https://mc-heads.net/avatar/steve`} 

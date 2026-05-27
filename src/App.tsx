@@ -438,18 +438,12 @@ function App() {
         </div>
       )}
 
-      {/* LEFT SIDEBAR - PROFILE ALWAYS VISIBLE */}
-      <ProfileCard 
-        gamertag={gamertag} 
-        onEditClick={() => setShowProfileModal(true)} 
-      />
-
       {/* MAIN CONTENT */}
       {/* MAIN CONTENT */}
       <main 
-        className="relative z-20 flex flex-col p-6 md:p-10 pointer-events-none"
-        style={{ width: '100vw', height: '100vh' }}
-      >
+  className="relative z-20 flex flex-col p-4 sm:p-6 pointer-events-none"
+  style={{ width: '100vw', height: '100vh' }}
+>
         
         {/* TOP LOGO */}
         <div className="w-full flex justify-end h-16 md:h-20 items-start flex-shrink-0">
