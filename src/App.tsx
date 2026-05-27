@@ -105,12 +105,12 @@ function App() {
     setMusicDebugLog(`Attempting to load ${musicTracks.length} tracks...`);
 
     if (isAndroid) {
-      // EN ANDROID: Usar <audio> HTML5 nativo con manejo de autoplay bloqueado
+      // EN ANDROID: Crear elemento silenciosamente, luego unmute en interacción
       let audioElement = musicRef.current as HTMLAudioElement;
       if (!audioElement) {
         audioElement = new Audio();
         audioElement.loop = false;
-        audioElement.volume = bgVolume / 100;
+        audioElement.volume = 0; // Comenzar silencioso
         audioElement.crossOrigin = "anonymous";
         musicRef.current = audioElement;
       }
@@ -120,21 +120,33 @@ function App() {
           const nextIndex = Math.floor(Math.random() * musicTracks.length);
           const trackUrl = musicTracks[nextIndex];
           audioElement.src = trackUrl;
-          const playPromise = audioElement.play();
           
-          setMusicDebugLog(`Loading track ${nextIndex + 1}: ${trackUrl.substring(0, 50)}...`);
+          setMusicDebugLog(`Loading track ${nextIndex + 1}...`);
+          
+          // Intentar reproducir silencioso (esto puede funcionar sin interacción)
+          const playPromise = audioElement.play();
           
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
-                console.log("Music started playing on Android");
-                setMusicDebugLog("✓ Music playing");
+                console.log("Music loaded silently (muted)");
+                setMusicDebugLog("✓ Ready (tap to unmute)");
+                // Una vez que esté reproduciéndose, agregar listener para unmute
+                const unmuteOnInteraction = () => {
+                  audioElement.volume = bgVolume / 100;
+                  setMusicDebugLog("♪ Music playing");
+                  document.removeEventListener('click', unmuteOnInteraction);
+                  document.removeEventListener('touchstart', unmuteOnInteraction);
+                };
+                document.addEventListener('click', unmuteOnInteraction);
+                document.addEventListener('touchstart', unmuteOnInteraction);
               })
               .catch((error) => {
-                console.warn("Audio autoplay blocked, waiting for user interaction:", error);
-                setMusicDebugLog("⚠ Autoplay blocked - tap screen to play");
-                // Intentar después de un evento de usuario
+                console.warn("Even silent play blocked:", error);
+                setMusicDebugLog("⚠ Tap screen to play");
+                // Fallback: reproducir en primera interacción
                 const playOnClick = () => {
+                  audioElement.volume = bgVolume / 100;
                   audioElement.play().catch(() => {});
                   document.removeEventListener('click', playOnClick);
                   document.removeEventListener('touchstart', playOnClick);
@@ -180,7 +192,7 @@ function App() {
         musicRef.current?.unload();
       }
     };
-  }, [musicTracks, isAndroid]);
+  }, [musicTracks, isAndroid, bgVolume]);
 
   useEffect(() => {
     volumeRef.current = bgVolume;
