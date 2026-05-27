@@ -394,8 +394,14 @@ function App() {
 
   return (
     <div 
-      className="absolute inset-0 overflow-hidden bg-zinc-950 text-white font-sans selection:bg-purple-500 select-none"
-      style={{ '--theme-color': themeColor } as React.CSSProperties}
+      className="overflow-hidden bg-zinc-950 text-white font-sans selection:bg-purple-500 select-none"
+      style={{ 
+        '--theme-color': themeColor,
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        width: '100vw',
+        height: '100vh'
+      } as React.CSSProperties}
     >
       {/* DYNAMIC BACKGROUND */}
       <div className="absolute inset-0 bg-black">
