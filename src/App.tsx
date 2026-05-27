@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Settings, Rocket, User } from 'lucide-react';
-import { Howl } from 'howler';
 import { useServerStatus } from './hooks/useServerStatus';
 
 import { SocialBar } from './components/SocialBar';
@@ -8,6 +7,17 @@ import { ServerStatusBox } from './components/ServerStatusBox';
 import { SettingsModal } from './components/SettingsModal';
 import { ProfileCard } from './components/ProfileCard';
 import './App.css';
+
+// Importar Howler solo si no es Android
+const isAndroidDevice = /Android/i.test(navigator.userAgent);
+let Howl: any = null;
+if (!isAndroidDevice) {
+  import('howler').then(module => {
+    Howl = module.Howl;
+  }).catch(() => {
+    console.warn('Howler not available');
+  });
+}
 
 function App() {
   // ==========================================
@@ -39,7 +49,7 @@ function App() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [gamertagInput, setGamertagInput] = useState(gamertag);
   
-  const musicRef = useRef<Howl | null>(null);
+  const musicRef = useRef<any>(null);
   const volumeRef = useRef(bgVolume);
 
   const [serverAddress, setServerAddress] = useState('play.hypixel.net:25565');
@@ -78,7 +88,7 @@ function App() {
   // ==========================================
   useEffect(() => {
     // NO REPRODUCIR MÚSICA EN ANDROID WebView
-    if (isAndroid || musicTracks.length === 0) return;
+    if (isAndroid || musicTracks.length === 0 || !Howl) return;
     
     const playRandomTrack = (currentIndex?: number) => {
       let nextIndex = Math.floor(Math.random() * musicTracks.length);
@@ -260,7 +270,7 @@ function App() {
             if (titleName) setTitleImg(`${baseUrl}icons/${titleName}?nocache=${new Date().getTime()}`);
             if (icons.logo) setLogoImg(`${baseUrl}icons/${icons.logo}?nocache=${new Date().getTime()}`);
           }
-          if (music) setMusicTracks(music.map((m: string) => `${baseUrl}music/${m}?nocache=${new Date().getTime()}`));
+          if (music && !isAndroid) setMusicTracks(music.map((m: string) => `${baseUrl}music/${m}?nocache=${new Date().getTime()}`));
           if (server) setServerAddress(`${server.ip}:${server.port}`);
           if (social_media) setSocialMedia(social_media);
         }
