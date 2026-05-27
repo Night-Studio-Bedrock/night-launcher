@@ -10,14 +10,11 @@ function App() {
   const [isVideoBg, setIsVideoBg] = useState(false);
   const [bgOpacity, setBgOpacity] = useState(1);
   const [titleImg, setTitleImg] = useState("");
-  const [logoImg, setLogoImg] = useState("");
   const [themeColor, setThemeColor] = useState("#a855f7");
   const [windowTitle, setWindowTitle] = useState("");
 
   const CONFIG_URL =
     "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
-
-  const isAndroid = /Android/i.test(navigator.userAgent);
 
   useEffect(() => {
     const initLauncher = async () => {
@@ -51,10 +48,6 @@ function App() {
             if (titleName)
               setTitleImg(
                 `${baseUrl}icons/${titleName}?nocache=${new Date().getTime()}`,
-              );
-            if (icons.logo)
-              setLogoImg(
-                `${baseUrl}icons/${icons.logo}?nocache=${new Date().getTime()}`,
               );
           }
         }
