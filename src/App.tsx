@@ -102,21 +102,42 @@ function App() {
     if (musicTracks.length === 0) return;
 
     if (isAndroid) {
-      // EN ANDROID: Usar <audio> HTML5 nativo
+      // EN ANDROID: Usar <audio> HTML5 nativo con manejo de autoplay bloqueado
       let audioElement = musicRef.current as HTMLAudioElement;
       if (!audioElement) {
         audioElement = new Audio();
         audioElement.loop = false;
         audioElement.volume = bgVolume / 100;
+        audioElement.crossOrigin = "anonymous";
         musicRef.current = audioElement;
       }
 
       const playRandomTrack = () => {
-        const nextIndex = Math.floor(Math.random() * musicTracks.length);
-        audioElement.src = musicTracks[nextIndex];
-        audioElement.play().catch((e) => {
-          console.warn("Audio autoplay blocked on Android:", e);
-        });
+        try {
+          const nextIndex = Math.floor(Math.random() * musicTracks.length);
+          audioElement.src = musicTracks[nextIndex];
+          const playPromise = audioElement.play();
+          
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                console.log("Music started playing on Android");
+              })
+              .catch((error) => {
+                console.warn("Audio autoplay blocked, waiting for user interaction:", error);
+                // Intentar después de un evento de usuario
+                const playOnClick = () => {
+                  audioElement.play().catch(() => {});
+                  document.removeEventListener('click', playOnClick);
+                  document.removeEventListener('touchstart', playOnClick);
+                };
+                document.addEventListener('click', playOnClick);
+                document.addEventListener('touchstart', playOnClick);
+              });
+          }
+        } catch (e) {
+          console.warn("Error playing audio:", e);
+        }
       };
 
       audioElement.onended = playRandomTrack;
@@ -364,13 +385,14 @@ function App() {
               );
           }
           // EN ANDROID, AHORA SI CARGAMOS MUSICA (con <audio> nativo)
-          if (music)
-            setMusicTracks(
-              music.map(
-                (m: string) =>
-                  `${baseUrl}music/${m}?nocache=${new Date().getTime()}`,
-              ),
+          if (music) {
+            const musicUrls = music.map(
+              (m: string) =>
+                `${baseUrl}music/${m}?nocache=${new Date().getTime()}`,
             );
+            console.log("Music tracks loaded:", musicUrls);
+            setMusicTracks(musicUrls);
+          }
           if (server) setServerAddress(`${server.ip}:${server.port}`);
           if (social_media) setSocialMedia(social_media);
         }
