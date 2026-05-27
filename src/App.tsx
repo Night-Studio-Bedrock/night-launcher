@@ -177,17 +177,22 @@ function App() {
         musicRef.current?.unload();
       }
     };
-  }, [musicTracks, isAndroid, bgVolume]);
+  }, [musicTracks, isAndroid]);
 
+  // ==========================================
+  // VOLUME EFFECT - ACTUALIZAR VOLUMEN SIN REINICIAR MÚSICA
+  // ==========================================
   useEffect(() => {
     volumeRef.current = bgVolume;
     if (isAndroid) {
       const audioElement = musicRef.current as HTMLAudioElement;
-      if (audioElement) audioElement.volume = bgVolume / 100;
+      if (audioElement) {
+        audioElement.volume = bgVolume / 100;
+      }
     } else {
       musicRef.current?.volume(bgVolume / 100);
     }
-  }, [bgVolume, isAndroid]);
+  }, [bgVolume]);
 
   // ==========================================
   // MONITOREAR CIERRE DE MINECRAFT
