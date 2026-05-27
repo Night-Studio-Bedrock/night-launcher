@@ -394,7 +394,7 @@ function App() {
 
   return (
     <div 
-      className="relative w-screen h-screen overflow-hidden bg-zinc-950 text-white font-sans selection:bg-purple-500 select-none"
+      className="absolute w-screen h-screen overflow-hidden bg-zinc-950 text-white font-sans selection:bg-purple-500 select-none"
       style={{ '--theme-color': themeColor } as React.CSSProperties}
     >
       {/* DYNAMIC BACKGROUND */}
