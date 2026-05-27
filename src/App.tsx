@@ -73,7 +73,6 @@ function App() {
   const [titleImg, setTitleImg] = useState("");
   const [logoImg, setLogoImg] = useState("");
   const [musicTracks, setMusicTracks] = useState<string[]>([]);
-  const [musicDebugLog, setMusicDebugLog] = useState<string>("");
   const [socialMedia, setSocialMedia] = useState<Record<string, string>>({});
 
   const [themeColor, setThemeColor] = useState("#a855f7");
@@ -102,15 +101,13 @@ function App() {
   useEffect(() => {
     if (musicTracks.length === 0) return;
 
-    setMusicDebugLog(`Attempting to load ${musicTracks.length} tracks...`);
-
     if (isAndroid) {
-      // EN ANDROID: Crear elemento silenciosamente, luego unmute en interacción
+      // EN ANDROID: Crear elemento, splash screen dispara click después
       let audioElement = musicRef.current as HTMLAudioElement;
       if (!audioElement) {
         audioElement = new Audio();
         audioElement.loop = false;
-        audioElement.volume = 0; // Comenzar silencioso
+        audioElement.volume = bgVolume / 100;
         audioElement.crossOrigin = "anonymous";
         musicRef.current = audioElement;
       }
@@ -120,49 +117,36 @@ function App() {
           const nextIndex = Math.floor(Math.random() * musicTracks.length);
           const trackUrl = musicTracks[nextIndex];
           audioElement.src = trackUrl;
-          
-          setMusicDebugLog(`Loading track ${nextIndex + 1}...`);
-          
-          // Intentar reproducir silencioso (esto puede funcionar sin interacción)
           const playPromise = audioElement.play();
           
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
-                console.log("Music loaded silently (muted)");
-                setMusicDebugLog("✓ Ready (tap to unmute)");
-                // Una vez que esté reproduciéndose, agregar listener para unmute
-                const unmuteOnInteraction = () => {
-                  audioElement.volume = bgVolume / 100;
-                  setMusicDebugLog("♪ Music playing");
-                  document.removeEventListener('click', unmuteOnInteraction);
-                  document.removeEventListener('touchstart', unmuteOnInteraction);
-                };
-                document.addEventListener('click', unmuteOnInteraction);
-                document.addEventListener('touchstart', unmuteOnInteraction);
+                console.log("Music playing on Android");
               })
               .catch((error) => {
-                console.warn("Even silent play blocked:", error);
-                setMusicDebugLog("⚠ Tap screen to play");
-                // Fallback: reproducir en primera interacción
-                const playOnClick = () => {
-                  audioElement.volume = bgVolume / 100;
-                  audioElement.play().catch(() => {});
-                  document.removeEventListener('click', playOnClick);
-                  document.removeEventListener('touchstart', playOnClick);
-                };
-                document.addEventListener('click', playOnClick);
-                document.addEventListener('touchstart', playOnClick);
+                console.warn("Playback error:", error);
               });
           }
         } catch (e) {
           console.warn("Error playing audio:", e);
-          setMusicDebugLog(`✗ Error: ${String(e).substring(0, 30)}`);
         }
       };
 
       audioElement.onended = playRandomTrack;
-      playRandomTrack();
+      
+      // Escuchar clicks para reproducir
+      const handleClick = () => {
+        playRandomTrack();
+      };
+      document.addEventListener('click', handleClick);
+      document.addEventListener('touchstart', handleClick);
+
+      return () => {
+        document.removeEventListener('click', handleClick);
+        document.removeEventListener('touchstart', handleClick);
+        if (audioElement) audioElement.pause();
+      };
     } else if (Howl) {
       // EN DESKTOP: Usar Howler
       const playRandomTrack = (currentIndex?: number) => {
@@ -833,13 +817,6 @@ function App() {
           shouldInject={shouldInject}
           onInjectChange={setShouldInject}
         />
-      )}
-
-      {/* DEBUG LOG - ONLY ON ANDROID */}
-      {isAndroid && musicDebugLog && (
-        <div className="fixed top-4 left-4 z-50 bg-black/80 border border-yellow-500 rounded px-3 py-2 text-xs text-yellow-400 font-mono max-w-[200px]">
-          {musicDebugLog}
-        </div>
       )}
     </div>
   );
