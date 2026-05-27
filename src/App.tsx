@@ -654,39 +654,81 @@ function App() {
             </span>
           </button>
 
-          {/* DOWNLOAD CARD - MORE VISIBLE ON ANDROID */}
-          <div
-            className={`bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md transition-all duration-500 transform pointer-events-auto flex items-center gap-4 md:gap-5 w-[95%] ${isAndroid ? "mt-2 p-3 max-w-[500px]" : "mt-2 p-4 md:p-5 max-w-[450px]"} ${isSyncing || isInjecting || isLaunching ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
-          >
-            <div className="flex-1 min-w-0">
-              <h3 className={`font-bold text-white tracking-wide truncate ${isAndroid ? "text-xs" : "text-sm"}`}>
-                {windowTitle || "Night Launcher"}
-              </h3>
-              <p className={`text-zinc-400 mt-1 truncate ${isAndroid ? "text-[9px]" : "text-[10px] md:text-xs"}`}>
-                {isInjecting
-                  ? `${injectMsg} ${estimatedTimeLeft ? `- ${estimatedTimeLeft}` : ""}`
-                  : isSyncing
-                    ? syncMsg
-                    : "Launching..."}
-              </p>
-              <div className={`bg-white/10 rounded-full overflow-hidden ${isAndroid ? "h-1 mt-2" : "h-1.5 mt-3 md:mt-4"}`}>
-                <div
-                  className="bg-purple-500 transition-all duration-500 ease-out"
-                  style={{
-                    width: `${isInjecting ? injectProgress : isSyncing ? syncProgress : 100}%`,
-                    backgroundColor: themeColor,
-                  }}
-                />
+          {/* DOWNLOAD CARD - NARROWER AND POSITIONED ABOVE ON ANDROID */}
+          {isAndroid ? (
+            <div
+              className={`absolute z-40 bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md transition-all duration-500 transform pointer-events-auto flex items-center gap-3 p-3 w-[70%] max-w-[300px] ${isSyncing || isInjecting || isLaunching ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+              style={{
+                bottom: "110px",
+                left: "50%",
+                transform: isSyncing || isInjecting || isLaunching 
+                  ? "translateX(-50%) translateY(0)" 
+                  : "translateX(-50%) translateY(20px)",
+              }}
+            >
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-white tracking-wide truncate text-xs">
+                  {windowTitle || "Night Launcher"}
+                </h3>
+                <p className="text-zinc-400 mt-1 truncate text-[9px]">
+                  {isInjecting
+                    ? `${injectMsg} ${estimatedTimeLeft ? `- ${estimatedTimeLeft}` : ""}`
+                    : isSyncing
+                      ? syncMsg
+                      : "Launching..."}
+                </p>
+                <div className="bg-white/10 rounded-full overflow-hidden h-1 mt-2">
+                  <div
+                    className="bg-purple-500 transition-all duration-500 ease-out"
+                    style={{
+                      width: `${isInjecting ? injectProgress : isSyncing ? syncProgress : 100}%`,
+                      backgroundColor: themeColor,
+                    }}
+                  />
+                </div>
               </div>
+              {logoImg && (
+                <img
+                  src={logoImg}
+                  alt="Thumb"
+                  className="rounded-xl bg-black/50 p-1.5 shadow-inner object-contain flex-shrink-0 w-10 h-10"
+                />
+              )}
             </div>
-            {logoImg && (
-              <img
-                src={logoImg}
-                alt="Thumb"
-                className={`rounded-xl bg-black/50 p-1.5 shadow-inner object-contain flex-shrink-0 ${isAndroid ? "w-10 h-10" : "w-12 h-12 md:w-16 md:h-16"}`}
-              />
-            )}
-          </div>
+          ) : (
+            <div
+              className={`bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md transition-all duration-500 transform pointer-events-auto flex items-center gap-4 md:gap-5 mt-2 p-4 md:p-5 w-[95%] max-w-[450px] ${isSyncing || isInjecting || isLaunching ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}
+            >
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-white tracking-wide truncate text-sm">
+                  {windowTitle || "Night Launcher"}
+                </h3>
+                <p className="text-zinc-400 mt-1 truncate text-[10px] md:text-xs">
+                  {isInjecting
+                    ? `${injectMsg} ${estimatedTimeLeft ? `- ${estimatedTimeLeft}` : ""}`
+                    : isSyncing
+                      ? syncMsg
+                      : "Launching..."}
+                </p>
+                <div className="bg-white/10 rounded-full overflow-hidden h-1.5 mt-3 md:mt-4">
+                  <div
+                    className="bg-purple-500 transition-all duration-500 ease-out"
+                    style={{
+                      width: `${isInjecting ? injectProgress : isSyncing ? syncProgress : 100}%`,
+                      backgroundColor: themeColor,
+                    }}
+                  />
+                </div>
+              </div>
+              {logoImg && (
+                <img
+                  src={logoImg}
+                  alt="Thumb"
+                  className="rounded-xl bg-black/50 p-1.5 shadow-inner object-contain flex-shrink-0 w-12 h-12 md:w-16 md:h-16"
+                />
+              )}
+            </div>
+          )}
         </div>
 
         {/* BOTTOM CONTAINER */}
