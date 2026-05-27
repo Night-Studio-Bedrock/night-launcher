@@ -62,6 +62,7 @@ function App() {
 
   const musicRef = useRef<any>(null);
   const volumeRef = useRef(bgVolume);
+  const musicStartedRef = useRef(false);
 
   const [serverAddress, setServerAddress] = useState("play.hypixel.net:25565");
   const serverData = useServerStatus(serverAddress);
@@ -102,7 +103,7 @@ function App() {
     if (musicTracks.length === 0) return;
 
     if (isAndroid) {
-      // EN ANDROID: Crear elemento, splash screen dispara click después
+      // EN ANDROID: Reproducir música una sola vez
       let audioElement = musicRef.current as HTMLAudioElement;
       if (!audioElement) {
         audioElement = new Audio();
@@ -110,6 +111,11 @@ function App() {
         audioElement.volume = bgVolume / 100;
         audioElement.crossOrigin = "anonymous";
         musicRef.current = audioElement;
+      }
+
+      // Si ya empezó a reproducir, no hacer nada
+      if (musicStartedRef.current) {
+        return;
       }
 
       const playRandomTrack = () => {
@@ -123,6 +129,7 @@ function App() {
             playPromise
               .then(() => {
                 console.log("Music playing on Android");
+                musicStartedRef.current = true;
               })
               .catch((error) => {
                 console.warn("Playback error:", error);
@@ -135,16 +142,10 @@ function App() {
 
       audioElement.onended = playRandomTrack;
       
-      // Escuchar clicks para reproducir
-      const handleClick = () => {
-        playRandomTrack();
-      };
-      document.addEventListener('click', handleClick);
-      document.addEventListener('touchstart', handleClick);
+      // Reproducir primera canción automáticamente
+      playRandomTrack();
 
       return () => {
-        document.removeEventListener('click', handleClick);
-        document.removeEventListener('touchstart', handleClick);
         if (audioElement) audioElement.pause();
       };
     } else if (Howl) {
