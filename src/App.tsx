@@ -639,10 +639,10 @@ function App() {
         </div>
 
         {/* BOTTOM CONTAINER */}
-        <div className="w-full flex items-end justify-between flex-shrink-0 mt-auto pt-2 z-30">
+        <div className="w-full flex items-end justify-between flex-shrink-0 mt-auto pt-2 z-30 relative">
           {/* 1. IZQUIERDA: Profile Card */}
           <div
-            className="flex-1 flex justify-start pointer-events-auto"
+            className="flex justify-start pointer-events-auto"
             style={{
               transform: isAndroid ? "scale(0.70)" : "scale(1)",
               transformOrigin: "bottom left",
@@ -654,11 +654,13 @@ function App() {
             />
           </div>
 
-          {/* 2. CENTRO: Redes Sociales */}
+          {/* 2. CENTRO: Redes Sociales (ABSOLUTO para centrado inamovible) */}
           <div
-            className="flex-1 flex justify-center pointer-events-auto"
+            className="absolute left-1/2 bottom-0 pointer-events-auto"
             style={{
-              transform: isAndroid ? "scale(0.80)" : "scale(1)",
+              transform: isAndroid
+                ? "translateX(-50%) scale(0.80)"
+                : "translateX(-50%) scale(1)",
               transformOrigin: "bottom center",
             }}
           >
@@ -667,7 +669,7 @@ function App() {
 
           {/* 3. DERECHA: Status y Settings */}
           <div
-            className="flex-1 flex justify-end items-center gap-2 md:gap-4 pointer-events-auto"
+            className="flex justify-end items-center gap-2 md:gap-4 pointer-events-auto"
             style={{
               transform: isAndroid ? "scale(0.70)" : "scale(1)",
               transformOrigin: "bottom right",
