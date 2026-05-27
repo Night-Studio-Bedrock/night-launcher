@@ -6,6 +6,7 @@ interface SettingsModalProps {
   setBgVolume: (val: number) => void;
   shouldInject: boolean;
   onInjectChange: (checked: boolean) => void;
+  isAndroid?: boolean;
 }
 
 export const SettingsModal = ({ 
@@ -13,7 +14,8 @@ export const SettingsModal = ({
   bgVolume, 
   setBgVolume, 
   shouldInject, 
-  onInjectChange 
+  onInjectChange,
+  isAndroid = false
 }: SettingsModalProps) => {
   return (
     <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
@@ -49,15 +51,17 @@ export const SettingsModal = ({
               />
           </div>
 
-          <label className="flex items-center gap-3 text-sm bg-black/50 p-4 rounded-xl border border-white/5 cursor-pointer hover:bg-black/70 transition-colors">
-              <input 
-                type="checkbox" 
-                checked={shouldInject} 
-                onChange={(e) => onInjectChange(e.target.checked)}
-                className="cursor-pointer"
-              />
-              <span>Auto-inject global resources</span>
-          </label>
+          {!isAndroid && (
+            <label className="flex items-center gap-3 text-sm bg-black/50 p-4 rounded-xl border border-white/5 cursor-pointer hover:bg-black/70 transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={shouldInject} 
+                  onChange={(e) => onInjectChange(e.target.checked)}
+                  className="cursor-pointer"
+                />
+                <span>Auto-inject global resources</span>
+            </label>
+          )}
         </div>
         
         <div className="flex justify-end pt-2">
