@@ -94,24 +94,29 @@ function App() {
       style={{
         "--theme-color": themeColor,
         position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100vw",
-        height: "100vh",
-        padding: 0,
-        margin: 0,
+        top: "0",
+        left: "0",
+        right: "0",
+        bottom: "0",
+        width: "100%",
+        height: "100%",
+        padding: "0",
+        margin: "0",
         overflow: "hidden",
         backgroundColor: "#000000",
+        boxSizing: "border-box",
       } as React.CSSProperties}
     >
       {/* BACKGROUND */}
       <div
         style={{
           position: "absolute",
-          inset: 0,
+          top: "0",
+          left: "0",
+          right: "0",
+          bottom: "0",
           backgroundColor: "#000000",
+          boxSizing: "border-box",
         }}
       >
         {isVideoBg && bgUrl ? (
@@ -124,41 +129,54 @@ function App() {
             src={bgUrl}
             style={{
               position: "absolute",
-              inset: 0,
+              top: "0",
+              left: "0",
+              right: "0",
+              bottom: "0",
               width: "100%",
               height: "100%",
               objectFit: "cover",
               opacity: bgOpacity,
+              display: "block",
             }}
           />
         ) : (
           <div
             style={{
               position: "absolute",
-              inset: 0,
+              top: "0",
+              left: "0",
+              right: "0",
+              bottom: "0",
               backgroundImage: bgUrl ? `url('${bgUrl}')` : "none",
               backgroundSize: "cover",
               backgroundPosition: "center",
               opacity: bgOpacity,
+              display: "block",
             }}
           />
         )}
         <div
           style={{
             position: "absolute",
-            inset: 0,
+            top: "0",
+            left: "0",
+            right: "0",
+            bottom: "0",
             backgroundColor: "rgba(0,0,0,0.2)",
+            display: "block",
           }}
         />
         <div
           style={{
             position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
+            bottom: "0",
+            left: "0",
+            right: "0",
             height: "192px",
             background:
               "linear-gradient(to top, #18181b, rgba(24,24,27,0.37), transparent)",
+            display: "block",
           }}
         />
       </div>
@@ -167,12 +185,16 @@ function App() {
       <div
         style={{
           position: "absolute",
-          inset: 0,
+          top: "0",
+          left: "0",
+          right: "0",
+          bottom: "0",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          zIndex: 20,
+          zIndex: "20",
+          boxSizing: "border-box",
         }}
       >
         {/* TITLE */}
@@ -186,6 +208,7 @@ function App() {
                 objectFit: "contain",
                 maxHeight: "35vh",
                 filter: "drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8))",
+                display: "block",
               }}
             />
           ) : (
@@ -196,7 +219,9 @@ function App() {
                 color: "#e4e4e7",
                 textShadow: "0 0 30px rgba(0,0,0,0.8)",
                 fontSize: "clamp(2rem, 8vw, 4rem)",
-                margin: 0,
+                margin: "0",
+                padding: "0",
+                display: "block",
               }}
             >
               {windowTitle || "NIGHT LAUNCHER"}
