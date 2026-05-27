@@ -73,6 +73,7 @@ function App() {
   const [titleImg, setTitleImg] = useState("");
   const [logoImg, setLogoImg] = useState("");
   const [musicTracks, setMusicTracks] = useState<string[]>([]);
+  const [musicDebugLog, setMusicDebugLog] = useState<string>("");
   const [socialMedia, setSocialMedia] = useState<Record<string, string>>({});
 
   const [themeColor, setThemeColor] = useState("#a855f7");
@@ -101,6 +102,8 @@ function App() {
   useEffect(() => {
     if (musicTracks.length === 0) return;
 
+    setMusicDebugLog(`Attempting to load ${musicTracks.length} tracks...`);
+
     if (isAndroid) {
       // EN ANDROID: Usar <audio> HTML5 nativo con manejo de autoplay bloqueado
       let audioElement = musicRef.current as HTMLAudioElement;
@@ -115,16 +118,21 @@ function App() {
       const playRandomTrack = () => {
         try {
           const nextIndex = Math.floor(Math.random() * musicTracks.length);
-          audioElement.src = musicTracks[nextIndex];
+          const trackUrl = musicTracks[nextIndex];
+          audioElement.src = trackUrl;
           const playPromise = audioElement.play();
+          
+          setMusicDebugLog(`Loading track ${nextIndex + 1}: ${trackUrl.substring(0, 50)}...`);
           
           if (playPromise !== undefined) {
             playPromise
               .then(() => {
                 console.log("Music started playing on Android");
+                setMusicDebugLog("✓ Music playing");
               })
               .catch((error) => {
                 console.warn("Audio autoplay blocked, waiting for user interaction:", error);
+                setMusicDebugLog("⚠ Autoplay blocked - tap screen to play");
                 // Intentar después de un evento de usuario
                 const playOnClick = () => {
                   audioElement.play().catch(() => {});
@@ -137,6 +145,7 @@ function App() {
           }
         } catch (e) {
           console.warn("Error playing audio:", e);
+          setMusicDebugLog(`✗ Error: ${String(e).substring(0, 30)}`);
         }
       };
 
@@ -812,6 +821,13 @@ function App() {
           shouldInject={shouldInject}
           onInjectChange={setShouldInject}
         />
+      )}
+
+      {/* DEBUG LOG - ONLY ON ANDROID */}
+      {isAndroid && musicDebugLog && (
+        <div className="fixed top-4 left-4 z-50 bg-black/80 border border-yellow-500 rounded px-3 py-2 text-xs text-yellow-400 font-mono max-w-[200px]">
+          {musicDebugLog}
+        </div>
       )}
     </div>
   );
