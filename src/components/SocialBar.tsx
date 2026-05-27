@@ -19,25 +19,17 @@ interface SocialBarProps {
 export const SocialBar = ({ socialMedia, isAndroid = false }: SocialBarProps) => {
   const handleOpenLink = (platform: string, url: string) => {
     if (isAndroid && platform.toLowerCase() === 'discord') {
-      // EN ANDROID: Intentar abrir Discord con intent
+      // EN ANDROID: Abirir Discord con Intent genérico
       try {
-        // Intentar abrir Discord app primero
-        const discordServerUrl = url; // e.g., "https://discord.gg/..."
-        // Extraer invite code si es posible
-        const match = url.match(/discord\.gg\/(\w+)/);
-        if (match) {
-          const inviteCode = match[1];
-          // Intent de Discord app
-          window.location.href = `discord://servers/${inviteCode}`;
-          // Si falla, fallback a navegador después de 500ms
-          setTimeout(() => {
-            window.open(discordServerUrl, '_blank');
-          }, 500);
-        } else {
-          // Fallback directo a navegador si no es invite válido
-          window.open(url, '_blank');
-        }
+        // Intentar con intent directo a navegador (más confiable en Android WebView)
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       } catch (e) {
+        console.warn('Discord link failed:', e);
         window.open(url, '_blank');
       }
     } else if (window.parent && window.parent !== window) {
