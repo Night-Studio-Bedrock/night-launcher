@@ -574,7 +574,7 @@ function App() {
               src={titleImg}
               alt="Title"
               draggable={false}
-              className="launcher-title max-h-[15vh] md:max-h-[20vh] object-contain pointer-events-auto"
+              className={`launcher-title object-contain pointer-events-auto ${isAndroid ? "max-h-[25vh]" : "max-h-[35vh]"}`}
             />
           ) : (
             <h1 className="text-4xl md:text-6xl font-black italic text-zinc-100 drop-shadow-2xl">
@@ -585,7 +585,7 @@ function App() {
           <button
             onClick={handleLaunchClick}
             disabled={isLaunching || isSyncing}
-            className={`rocket-button group pointer-events-auto ${isLaunching ? "launch-state" : isSyncing ? "sync-state" : ""}`}
+            className={`rocket-button group pointer-events-auto origin-center ${isAndroid ? "scale-75 -mt-2" : "scale-100"} ${isLaunching ? "launch-state" : isSyncing ? "sync-state" : ""}`}
           >
             <Rocket
               className={`w-5 h-5 md:w-6 md:h-6 transition-transform duration-500 ${isLaunching ? "rotate-45 text-green-500" : isSyncing ? "animate-pulse text-zinc-500" : "group-hover:-rotate-12 group-hover:-translate-y-1"}`}
@@ -640,8 +640,14 @@ function App() {
 
         {/* BOTTOM CONTAINER */}
         <div className="w-full flex items-end justify-between flex-shrink-0 mt-auto pt-2 z-30">
-          {/* 1. IZQUIERDA: Profile Card integrada al layout */}
-          <div className="flex-1 flex justify-start pointer-events-auto scale-90 sm:scale-100 origin-bottom-left">
+          {/* 1. IZQUIERDA: Profile Card */}
+          <div
+            className="flex-1 flex justify-start pointer-events-auto"
+            style={{
+              transform: isAndroid ? "scale(0.70)" : "scale(1)",
+              transformOrigin: "bottom left",
+            }}
+          >
             <ProfileCard
               gamertag={gamertag}
               onEditClick={() => setShowProfileModal(true)}
@@ -649,13 +655,24 @@ function App() {
           </div>
 
           {/* 2. CENTRO: Redes Sociales */}
-          <div className="flex-1 flex justify-center pointer-events-auto scale-75 sm:scale-100">
+          <div
+            className="flex-1 flex justify-center pointer-events-auto"
+            style={{
+              transform: isAndroid ? "scale(0.80)" : "scale(1)",
+              transformOrigin: "bottom center",
+            }}
+          >
             <SocialBar socialMedia={socialMedia} />
           </div>
 
           {/* 3. DERECHA: Status y Settings */}
-          <div className="flex-1 flex justify-end items-center gap-2 md:gap-4 pointer-events-auto scale-90 sm:scale-100 origin-bottom-right">
-            {/* En celulares muy pequeños ocultamos el Server Status para que no choque */}
+          <div
+            className="flex-1 flex justify-end items-center gap-2 md:gap-4 pointer-events-auto"
+            style={{
+              transform: isAndroid ? "scale(0.70)" : "scale(1)",
+              transformOrigin: "bottom right",
+            }}
+          >
             <div className="hidden sm:block">
               <ServerStatusBox {...serverData} />
             </div>
