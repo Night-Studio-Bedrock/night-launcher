@@ -69,10 +69,17 @@ function App() {
   const CONFIG_URL = "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
 
   // ==========================================
+  // DETECT IF ANDROID
+  // ==========================================
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  // ==========================================
   // MUSIC EFFECT
   // ==========================================
   useEffect(() => {
-    if (musicTracks.length === 0) return;
+    // NO REPRODUCIR MÚSICA EN ANDROID WebView
+    if (isAndroid || musicTracks.length === 0) return;
+    
     const playRandomTrack = (currentIndex?: number) => {
       let nextIndex = Math.floor(Math.random() * musicTracks.length);
       if (musicTracks.length > 1 && nextIndex === currentIndex) nextIndex = (nextIndex + 1) % musicTracks.length;
@@ -85,7 +92,7 @@ function App() {
     };
     playRandomTrack();
     return () => { musicRef.current?.unload(); };
-  }, [musicTracks]);
+  }, [musicTracks, isAndroid]);
 
   useEffect(() => {
     volumeRef.current = bgVolume;

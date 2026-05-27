@@ -1,0 +1,47 @@
+  // ==========================================
+  // MUSIC EFFECT
+  // ==========================================
+  useEffect(() => {
+    // NO REPRODUCIR MÚSICA EN ANDROID WebView
+    if (isAndroid || musicTracks.length === 0) return;
+    
+    try {
+      const playRandomTrack = (currentIndex?: number) => {
+        try {
+          let nextIndex = Math.floor(Math.random() * musicTracks.length);
+          if (musicTracks.length > 1 && nextIndex === currentIndex) nextIndex = (nextIndex + 1) % musicTracks.length;
+          if (musicRef.current) musicRef.current.unload();
+          
+          musicRef.current = new Howl({
+            src: [musicTracks[nextIndex]],
+            html5: true, 
+            autoplay: true, 
+            volume: volumeRef.current / 100,
+            onend: () => playRandomTrack(nextIndex),
+            onloaderror: () => {
+              console.warn('Howler loader error, retrying...');
+              setTimeout(() => playRandomTrack(nextIndex), 1000);
+            },
+            onfail: () => {
+              console.warn('Howler playback failed, retrying...');
+              setTimeout(() => playRandomTrack(nextIndex), 1000);
+            }
+          });
+        } catch (innerError) {
+          console.warn('Error playing track:', innerError);
+        }
+      };
+      
+      playRandomTrack();
+    } catch (error) {
+      console.warn('Howler initialization error:', error);
+    }
+    
+    return () => { 
+      try {
+        musicRef.current?.unload(); 
+      } catch (e) {
+        console.warn('Error unloading music:', e);
+      }
+    };
+  }, [musicTracks, isAndroid]);
