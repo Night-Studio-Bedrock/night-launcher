@@ -1,13 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Rocket } from "lucide-react";
-import { useServerStatus } from "./hooks/useServerStatus";
 import "./App.css";
 
 function App() {
   const [isLaunching, setIsLaunching] = useState(false);
   const [isSyncing, setIsSyncing] = useState(true);
-  const [syncMsg, setSyncMsg] = useState("Downloading Night Assets...");
-  const [syncProgress, setSyncProgress] = useState(0);
 
   const [bgUrl, setBgUrl] = useState("");
   const [isVideoBg, setIsVideoBg] = useState(false);
@@ -20,23 +17,15 @@ function App() {
   const CONFIG_URL =
     "https://night-studio-bedrock.github.io/night-launcher-data/data.json";
 
-  // ==========================================
-  // DETECT IF ANDROID
-  // ==========================================
   const isAndroid = /Android/i.test(navigator.userAgent);
 
-  // ==========================================
-  // INITIALIZE LAUNCHER
-  // ==========================================
   useEffect(() => {
     const initLauncher = async () => {
       try {
-        setSyncProgress(20);
         const res = await fetch(
           `${CONFIG_URL}?nocache=${new Date().getTime()}`,
         );
         if (!res.ok) throw new Error("Failed to fetch configuration");
-        setSyncProgress(50);
         const config = await res.json();
 
         const baseUrl =
@@ -69,11 +58,8 @@ function App() {
               );
           }
         }
-        setSyncProgress(100);
         setIsSyncing(false);
       } catch (error) {
-        setSyncMsg("Ready!");
-        setSyncProgress(100);
         setIsSyncing(false);
       }
     };
@@ -93,11 +79,6 @@ function App() {
       const { ip, port } = config.data.server;
       const minecraftUri = `minecraft://connect?serverUrl=${ip}&serverPort=${port}`;
       
-      const intent = Intent(Intent.ACTION_VIEW, Uri.parse(minecraftUri));
-      intent.setAction(Intent.ACTION_VIEW);
-      intent.setData(Uri.parse(minecraftUri));
-      
-      // Abrir con Minecraft
       window.location.href = minecraftUri;
 
       setIsLaunching(false);
@@ -110,24 +91,29 @@ function App() {
 
   return (
     <div
-      className="overflow-hidden bg-zinc-950 text-white font-sans selection:bg-purple-500 select-none"
-      style={
-        {
-          "--theme-color": themeColor,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          width: "100vw",
-          height: "100vh",
-          padding: 0,
-          margin: 0,
-        } as React.CSSProperties
-      }
+      style={{
+        "--theme-color": themeColor,
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100vw",
+        height: "100vh",
+        padding: 0,
+        margin: 0,
+        overflow: "hidden",
+        backgroundColor: "#000000",
+      } as React.CSSProperties}
     >
-      {/* DYNAMIC BACKGROUND */}
-      <div className="absolute inset-0 bg-black">
+      {/* BACKGROUND */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundColor: "#000000",
+        }}
+      >
         {isVideoBg && bgUrl ? (
           <video
             key={bgUrl}
@@ -136,82 +122,116 @@ function App() {
             muted
             playsInline
             src={bgUrl}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-[10s] hover:scale-105"
-            style={{ opacity: bgOpacity }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: bgOpacity,
+            }}
           />
         ) : (
           <div
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-[10s] hover:scale-105"
             style={{
+              position: "absolute",
+              inset: 0,
               backgroundImage: bgUrl ? `url('${bgUrl}')` : "none",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
               opacity: bgOpacity,
             }}
           />
         )}
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent" />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: "rgba(0,0,0,0.2)",
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: "192px",
+            background:
+              "linear-gradient(to top, #18181b, rgba(24,24,27,0.37), transparent)",
+          }}
+        />
       </div>
 
-      {/* MAIN CONTENT */}
-      <main
-        className="relative z-20 flex flex-col items-center justify-center pointer-events-none"
-        style={{ width: "100vw", height: "100vh", padding: 0, margin: 0 }}
+      {/* CONTENT */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 20,
+        }}
       >
-        {/* TOP LOGO */}
-        <div className="absolute top-4 right-4 z-30 pointer-events-auto">
-          {logoImg && (
-            <img
-              src={logoImg}
-              alt="Logo"
-              draggable={false}
-              className="w-16 h-16 object-contain transition-transform hover:scale-110 drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-            />
-          )}
-        </div>
-
-        {/* CENTRAL CONTENT */}
-        <div className="flex flex-col items-center gap-6 z-20">
+        {/* TITLE */}
+        <div style={{ marginBottom: "32px" }}>
           {titleImg ? (
             <img
               src={titleImg}
               alt="Title"
               draggable={false}
-              className="launcher-title object-contain max-h-[35vh] pointer-events-auto"
+              style={{
+                objectFit: "contain",
+                maxHeight: "35vh",
+                filter: "drop-shadow(0 10px 30px rgba(0, 0, 0, 0.8))",
+              }}
             />
           ) : (
-            <h1 className="font-black italic text-zinc-100 drop-shadow-2xl text-4xl md:text-6xl">
+            <h1
+              style={{
+                fontWeight: 900,
+                fontStyle: "italic",
+                color: "#e4e4e7",
+                textShadow: "0 0 30px rgba(0,0,0,0.8)",
+                fontSize: "clamp(2rem, 8vw, 4rem)",
+                margin: 0,
+              }}
+            >
               {windowTitle || "NIGHT LAUNCHER"}
             </h1>
           )}
-
-          <button
-            onClick={handleLaunchClick}
-            disabled={isButtonDisabled}
-            className={`rocket-button group pointer-events-auto origin-center cursor-pointer scale-100 ${isLaunching ? "launch-state" : isSyncing ? "sync-state" : ""} ${isButtonDisabled ? "opacity-50" : "opacity-100"}`}
-          >
-            <Rocket
-              className={`w-6 h-6 transition-transform duration-500 ${isLaunching ? "rotate-45 text-green-500" : isSyncing ? "animate-pulse text-zinc-500" : "group-hover:-rotate-12 group-hover:-translate-y-1"}`}
-              style={{
-                color:
-                  !isButtonDisabled && !isLaunching && !isSyncing
-                    ? themeColor
-                    : undefined,
-              }}
-            />
-            <span
-              className={`font-bold tracking-widest text-lg md:text-xl ${isLaunching ? "animate-pulse text-green-500" : isSyncing ? "text-zinc-500" : ""}`}
-              style={{
-                color:
-                  !isButtonDisabled && !isLaunching && !isSyncing
-                    ? themeColor
-                    : undefined,
-              }}
-            >
-              {isLaunching ? "LAUNCHING..." : isSyncing ? "WAIT..." : "LAUNCH"}
-            </span>
-          </button>
         </div>
-      </main>
+
+        {/* LAUNCH BUTTON */}
+        <button
+          onClick={handleLaunchClick}
+          disabled={isButtonDisabled}
+          className="rocket-button"
+          style={{
+            opacity: isButtonDisabled ? 0.5 : 1,
+            cursor: isButtonDisabled ? "wait" : "pointer",
+          }}
+        >
+          <Rocket
+            style={{
+              width: "24px",
+              height: "24px",
+              color: !isButtonDisabled ? themeColor : "currentColor",
+            }}
+          />
+          <span
+            style={{
+              fontWeight: "bold",
+              letterSpacing: "0.1em",
+              color: !isButtonDisabled ? themeColor : "currentColor",
+            }}
+          >
+            {isLaunching ? "LAUNCHING..." : isSyncing ? "WAIT..." : "LAUNCH"}
+          </span>
+        </button>
+      </div>
     </div>
   );
 }
