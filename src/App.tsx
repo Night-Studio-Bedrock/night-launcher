@@ -659,7 +659,7 @@ function App() {
             <div
               className={`absolute z-40 bg-black/40 border border-white/10 rounded-2xl backdrop-blur-md transition-all duration-500 transform pointer-events-auto flex items-center gap-3 p-3 w-[70%] max-w-[300px] ${isSyncing || isInjecting || isLaunching ? "opacity-100" : "opacity-0 pointer-events-none"}`}
               style={{
-                bottom: "110px",
+                bottom: "40px",
                 left: "50%",
                 transform: isSyncing || isInjecting || isLaunching 
                   ? "translateX(-50%) translateY(0)" 
