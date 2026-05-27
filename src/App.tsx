@@ -445,7 +445,11 @@ function App() {
       />
 
       {/* MAIN CONTENT */}
-      <main className="relative z-20 w-full h-full flex flex-col p-6 md:p-10 pointer-events-none">
+      {/* MAIN CONTENT */}
+      <main 
+        className="relative z-20 flex flex-col p-6 md:p-10 pointer-events-none"
+        style={{ width: '100vw', height: '100vh' }}
+      >
         
         {/* TOP LOGO */}
         <div className="w-full flex justify-end h-16 md:h-20 items-start flex-shrink-0">
